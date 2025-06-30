@@ -1,0 +1,99 @@
+2025-05-22T14:38:03.984Z - Session check requested: unknown
+2025-05-22T14:38:03.991Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-22T14:38:03.992Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-22T14:38:03.992Z"}
+2025-05-22T14:43:03.969Z - Session check requested: unknown
+2025-05-22T14:43:03.975Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-22T14:43:03.976Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-22T14:43:03.976Z"}
+2025-05-22T14:50:55.343Z - Session check requested: unknown
+2025-05-22T14:50:55.362Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-22T14:50:55.362Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-22T14:50:55.362Z"}
+2025-05-22T14:55:54.585Z - Session check requested: unknown
+2025-05-22T14:55:54.596Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-22T14:55:54.597Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-22T14:55:54.597Z"}
+2025-05-22T15:00:55.794Z - Session check requested: unknown
+2025-05-22T15:00:55.803Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-22T15:00:55.804Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-22T15:00:55.804Z"}
+2025-05-22T15:07:00.159Z - Session check requested: unknown
+2025-05-22T15:07:00.217Z - Session check: sessionToken=true, debugToken=false, session=false
+2025-05-22T15:07:00.218Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-22T15:07:00.218Z"}
+2025-05-22T15:17:47.841Z - Session check requested: unknown
+2025-05-22T15:17:47.850Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-22T15:17:47.851Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-22T15:17:47.851Z"}
+2025-05-29T03:35:31.588Z - Session check requested: unknown
+2025-05-29T03:35:31.594Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T03:35:31.595Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T03:35:31.595Z"}
+2025-05-29T03:48:36.586Z - Session check requested: unknown
+2025-05-29T03:48:36.593Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T03:48:36.594Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T03:48:36.594Z"}
+2025-05-29T03:57:31.743Z - Session check requested: unknown
+2025-05-29T03:57:31.753Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T03:57:31.753Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T03:57:31.753Z"}
+2025-05-29T04:08:54.380Z - Session check requested: unknown
+2025-05-29T04:08:54.395Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T04:08:54.396Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T04:08:54.396Z"}
+2025-05-29T05:02:11.277Z - Session check requested: unknown
+2025-05-29T05:02:11.290Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T05:02:11.291Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T05:02:11.291Z"}
+2025-05-29T05:20:00.801Z - Session check requested: unknown
+2025-05-29T05:20:00.814Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T05:20:00.815Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T05:20:00.815Z"}
+2025-05-29T07:30:03.655Z - Session check requested: unknown
+2025-05-29T07:30:03.734Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T07:30:03.741Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T07:30:03.741Z"}
+2025-05-29T07:34:59.366Z - Session check requested: unknown
+2025-05-29T07:34:59.383Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T07:34:59.384Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T07:34:59.384Z"}
+2025-05-29T07:45:15.183Z - Session check requested: unknown
+2025-05-29T07:45:15.252Z - Session check: sessionToken=true, debugToken=false, session=false
+2025-05-29T07:45:15.253Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T07:45:15.253Z"}
+2025-05-29T07:50:11.275Z - Session check requested: unknown
+2025-05-29T07:50:11.291Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T07:50:11.291Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T07:50:11.291Z"}
+2025-05-29T07:55:13.103Z - Session check requested: unknown
+2025-05-29T07:55:13.141Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T07:55:13.146Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T07:55:13.145Z"}
+2025-05-29T08:00:11.524Z - Session check requested: unknown
+2025-05-29T08:00:11.542Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T08:00:11.543Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T08:00:11.543Z"}
+2025-05-29T08:08:25.026Z - Session check requested: unknown
+2025-05-29T08:08:25.036Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T08:08:25.038Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T08:08:25.038Z"}
+2025-05-29T08:17:54.708Z - Session check requested: unknown
+2025-05-29T08:17:54.714Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T08:17:54.715Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T08:17:54.715Z"}
+2025-05-29T08:53:50.216Z - Session check requested: unknown
+2025-05-29T08:53:50.234Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T08:53:50.235Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T08:53:50.235Z"}
+2025-05-29T08:58:48.244Z - Session check requested: unknown
+2025-05-29T08:58:48.248Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T08:58:48.248Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T08:58:48.248Z"}
+2025-05-29T09:07:42.534Z - Session check requested: unknown
+2025-05-29T09:07:42.555Z - Session check: sessionToken=true, debugToken=false, session=false
+2025-05-29T09:07:42.557Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T09:07:42.557Z"}
+2025-05-29T09:12:41.323Z - Session check requested: unknown
+2025-05-29T09:12:41.331Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T09:12:41.332Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T09:12:41.332Z"}
+2025-05-29T11:51:34.193Z - Session check requested: unknown
+2025-05-29T11:51:34.218Z - Session check: sessionToken=true, debugToken=false, session=false
+2025-05-29T11:51:34.219Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T11:51:34.219Z"}
+2025-05-29T12:00:00.560Z - Session check requested: unknown
+2025-05-29T12:00:00.570Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T12:00:00.571Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T12:00:00.571Z"}
+2025-05-29T12:11:55.683Z - Session check requested: unknown
+2025-05-29T12:11:55.693Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T12:11:55.693Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T12:11:55.693Z"}
+2025-05-29T12:33:41.435Z - Session check requested: unknown
+2025-05-29T12:33:41.487Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T12:33:41.487Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T12:33:41.487Z"}
+2025-05-29T12:55:37.548Z - Session check requested: unknown
+2025-05-29T12:55:37.565Z - Session check: sessionToken=true, debugToken=false, session=false
+2025-05-29T12:55:37.566Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T12:55:37.566Z"}
+2025-05-29T13:10:10.643Z - Session check requested: unknown
+2025-05-29T13:10:10.652Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T13:10:10.652Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T13:10:10.652Z"}
+2025-05-29T13:18:55.558Z - Session check requested: unknown
+2025-05-29T13:18:55.569Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T13:18:55.570Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T13:18:55.570Z"}
+2025-05-29T13:25:25.914Z - Session check requested: unknown
+2025-05-29T13:25:25.930Z - Session check: sessionToken=false, debugToken=false, session=false
+2025-05-29T13:25:25.931Z - Session check result: {"valid":false,"session":false,"tokenValid":false,"tokenData":null,"timestamp":"2025-05-29T13:25:25.931Z"}
