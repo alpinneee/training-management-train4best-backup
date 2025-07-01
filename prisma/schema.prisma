@@ -38,6 +38,7 @@ model Class {
   course             Course               @relation(fields: [courseId], references: [id], map: "Class_courseId_fkey")
   courseregistration CourseRegistration[]
   instructureclass   InstructureClass[]
+  materials          CourseMaterial[]
 
   @@index([courseId], map: "Class_courseId_fkey")
   @@map("class")
@@ -72,6 +73,7 @@ model CourseRegistration {
   participant    Participant     @relation(fields: [participantId], references: [id], map: "CourseRegistration_participantId_fkey")
   payments       Payment[]
   valuereport    ValueReport[]
+  attendance     Attendance[]
 
   @@index([classId], map: "CourseRegistration_classId_fkey")
   @@index([participantId], map: "CourseRegistration_participantId_fkey")
@@ -96,6 +98,7 @@ model Instructure {
   instructureclass InstructureClass[]
   user             User[]
   valuereport      ValueReport[]
+  certificates     Certificate[]      @relation("Certificate_instructureId_fkey")
 
   @@map("instructure")
 }
@@ -182,6 +185,7 @@ model Certificate {
   expiryDate        DateTime
   status            String       @default("Valid")
   participantId     String?
+  instructureId     String?
   courseId          String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
@@ -189,9 +193,11 @@ model Certificate {
   driveLink         String?
   course            Course?      @relation(fields: [courseId], references: [id], map: "Certificate_courseId_fkey")
   participant       Participant? @relation(fields: [participantId], references: [id], map: "Certificate_participantId_fkey")
+  instructure       Instructure? @relation(fields: [instructureId], references: [id], map: "Certificate_instructureId_fkey", name: "Certificate_instructureId_fkey")
 
   @@index([courseId], map: "Certificate_courseId_fkey")
   @@index([participantId], map: "Certificate_participantId_fkey")
+  @@index([instructureId], map: "Certificate_instructureId_fkey")
   @@map("certificate")
 }
 
@@ -232,4 +238,35 @@ model SystemSetting {
   updatedAt  DateTime @updatedAt
 
   @@map("systemsetting")
+}
+
+model CourseMaterial {
+  id             String   @id @default(uuid())
+  title          String
+  description    String?  @db.Text
+  fileUrl        String
+  day            Int
+  size           Int?
+  isGoogleDrive  Boolean  @default(false)
+  courseScheduleId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  class          Class    @relation(fields: [courseScheduleId], references: [id], map: "CourseMaterial_courseScheduleId_fkey")
+
+  @@index([courseScheduleId], map: "CourseMaterial_courseScheduleId_fkey")
+  @@map("coursematerial")
+}
+
+model Attendance {
+  id             String   @id @default(uuid())
+  registrationId String
+  date           DateTime @default(now())
+  status         String   // "present" atau "absent"
+  mode           String   // "online" atau "offline"
+  createdBy      String?  // id admin/instructure yang mengabsen (opsional)
+  registration   CourseRegistration @relation(fields: [registrationId], references: [id])
+  
+  @@index([registrationId])
+  @@map("attendance")
 }

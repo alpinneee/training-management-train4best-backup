@@ -93,7 +93,7 @@ export async function GET(request: Request, { params }: Params) {
       // Related data
       courseType: schedule.course.courseType.course_type,
       courseTypeId: schedule.course.courseType.id,
-      participants: schedule.courseregistration.map(reg => ({
+      participants: schedule.courseregistration.map((reg: any) => ({
         id: reg.id,
         participantId: reg.participantId,
         name: reg.participant.full_name,
@@ -104,7 +104,7 @@ export async function GET(request: Request, { params }: Params) {
         regDate: formatDate(reg.reg_date),
         regStatus: reg.reg_status,
       })),
-      instructures: schedule.instructureclass.map(ic => ({
+      instructures: schedule.instructureclass.map((ic: any) => ({
         id: ic.id,
         instructureId: ic.instructureId,
         name: ic.instructure.full_name,
@@ -264,7 +264,7 @@ export async function DELETE(request: Request, { params }: Params) {
     }
 
     // Delete in transaction
-    await prisma.$transaction(async (prisma) => {
+    await prisma.$transaction(async (prisma: any) => {
       // Delete registrations if force delete
       if (force && existingSchedule.courseregistration.length > 0) {
         await prisma.courseRegistration.deleteMany({

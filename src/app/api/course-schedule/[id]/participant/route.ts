@@ -140,7 +140,7 @@ export async function DELETE(request: Request, { params }: Params) {
     console.log(`Registration found with id: ${registration.id}, preparing to delete related records`);
 
     // Gunakan Prisma client standar untuk menghapus data
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 1. Hapus payments
       console.log('Deleting payments...');
       await tx.payment.deleteMany({

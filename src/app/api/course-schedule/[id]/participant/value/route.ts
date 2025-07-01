@@ -75,7 +75,7 @@ export async function GET(
     console.log(`Found ${values.length} values for registration ${registration.id}`);
 
     // Transform data for response
-    const formattedValues = values.map(value => ({
+    const formattedValues = values.map((value: any) => ({
       id: value.id,
       valueType: value.value_type,
       remark: value.remark || "",

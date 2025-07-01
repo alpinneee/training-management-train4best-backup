@@ -52,7 +52,7 @@ export async function GET(request: Request) {
     console.log(`API: Found ${schedules.length} schedules for current page`);
     
     // Format response
-    const formattedSchedules = schedules.map((schedule, index) => ({
+    const formattedSchedules = schedules.map((schedule: any, index: number) => ({
       no: skip + index + 1,
       id: schedule.id,
       className: schedule.course.course_name,
