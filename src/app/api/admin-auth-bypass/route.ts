@@ -7,14 +7,18 @@ import { prisma } from "@/lib/prisma";
 
 // Fungsi untuk logging
 function logDebug(message: string, data?: any) {
-  console.log(`[ADMIN-BYPASS] ${message}`, data ? JSON.stringify(data) : '');
+  if (data) {
+    console.log("[ADMIN-BYPASS] " + message, JSON.stringify(data));
+  } else {
+    console.log("[ADMIN-BYPASS] " + message);
+  }
 }
 
 export async function POST(req: Request) {
   try {
     // Dapatkan email dari request
     const { email } = await req.json();
-    logDebug(`Admin bypass attempt for: ${email}`);
+    logDebug("Admin bypass attempt for: " + email);
     
     if (!email) {
       logDebug("Missing email");
@@ -31,7 +35,7 @@ export async function POST(req: Request) {
     });
     
     if (!user) {
-      logDebug(`User not found: ${email}`);
+      logDebug("User not found: " + email);
       return NextResponse.json({
         success: false,
         error: "User tidak ditemukan"
@@ -40,14 +44,14 @@ export async function POST(req: Request) {
     
     // Verifikasi bahwa user adalah admin
     if (!user.userType || user.userType.usertype.toLowerCase() !== "admin") {
-      logDebug(`User is not admin: ${email}, userType: ${user.userType?.usertype || "undefined"}`);
+      logDebug("User is not admin: " + email + ", userType: " + (user.userType?.usertype || "undefined"));
       return NextResponse.json({
         success: false,
         error: "User bukan admin"
       }, { status: 403 });
     }
     
-    logDebug(`Admin user verified: ${email}`);
+    logDebug("Admin user verified: " + email);
     
     // Buat token JWT khusus admin dengan masa berlaku panjang
     const secret = process.env.NEXTAUTH_SECRET;
@@ -78,7 +82,7 @@ export async function POST(req: Request) {
       { expiresIn: "30d" } // Token berlaku 30 hari
     );
     
-    logDebug(`Admin bypass token generated, length: ${token.length}`);
+    logDebug("Admin bypass token generated, length: " + token.length);
     
     // Buat response dengan token
     const response = NextResponse.json({
