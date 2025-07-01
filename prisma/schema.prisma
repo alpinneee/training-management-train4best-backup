@@ -185,8 +185,8 @@ model Certificate {
   expiryDate        DateTime
   status            String       @default("Valid")
   participantId     String?
-  instructureId     String?
   courseId          String?
+  instructureId     String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   pdfUrl            String?
