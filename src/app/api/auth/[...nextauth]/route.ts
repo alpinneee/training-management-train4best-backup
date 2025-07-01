@@ -27,11 +27,11 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         // Jika tidak ada database, return user dummy agar build sukses
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Mohon masukkan email dan kata sandi')
-        }
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error('Mohon masukkan email dan kata sandi')
+          }
         // Return user dummy
-        return {
+          return {
           id: 'dummy-id',
           email: credentials.email,
           name: 'Dummy User',
@@ -50,20 +50,20 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        if (user.name) token.name = user.name;
+        if (user) {
+          token.id = user.id;
+          token.email = user.email;
+          if (user.name) token.name = user.name;
         token.userType = (user as any).userType || '';
       }
       return token;
     },
     async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.name = token.name as string;
-        session.user.email = token.email as string;
-        session.user.userType = token.userType as string;
+        if (token && session.user) {
+          session.user.id = token.id as string;
+          session.user.name = token.name as string;
+          session.user.email = token.email as string;
+          session.user.userType = token.userType as string;
       }
       return session;
     }
