@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# large files
+*.zip
+train4best--1-management-training-new.zip
+node_modules.zip
