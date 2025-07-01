@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { v4 as uuidv4 } from 'uuid';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // Ensure default unassigned role exists
 async function ensureDefaultRolesExist() {

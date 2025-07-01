@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { hash } from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 interface Params {
   params: {

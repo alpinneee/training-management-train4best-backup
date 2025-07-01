@@ -1,9 +1,10 @@
-export const runtime = 'nodejs';
 
 import { NextResponse } from "next/server";
 import { sign } from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // Fungsi untuk logging
 function logDebug(message: string, data?: any) {

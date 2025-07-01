@@ -5,7 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { decode } from "next-auth/jwt";
 import jwt from "jsonwebtoken";
-
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 // Helper function to get current user ID
 async function getCurrentUserId() {
   let userId = null;

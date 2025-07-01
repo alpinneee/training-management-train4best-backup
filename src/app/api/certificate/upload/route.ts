@@ -4,6 +4,8 @@ import { join } from 'path';
 import { cwd } from 'process';
 import { prisma } from '@/lib/prisma';
 import fs from 'fs';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {

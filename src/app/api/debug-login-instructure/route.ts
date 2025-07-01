@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { prisma } from '@/lib/prisma';
 import { sign } from 'jsonwebtoken';
 import { cookies } from 'next/headers';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {

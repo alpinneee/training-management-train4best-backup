@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { verify } from "jsonwebtoken";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // Fungsi untuk logging
 function logDebug(message: string, data?: any) {

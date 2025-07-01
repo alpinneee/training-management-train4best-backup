@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 // Ensure default unassigned role exists
 async function ensureDefaultRolesExist() {
   const roles = [

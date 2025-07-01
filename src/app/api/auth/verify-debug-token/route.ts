@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
-
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 export async function GET() {
   try {
     // Ambil token dari cookie

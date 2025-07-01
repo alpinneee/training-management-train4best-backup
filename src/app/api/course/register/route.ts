@@ -6,7 +6,8 @@ import { cookies } from "next/headers";
 import { decode } from "next-auth/jwt";
 import jwt from "jsonwebtoken";
 import { getBankAccounts } from "@/app/api/bank-accounts/route";
-
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 // Function untuk mendapatkan user langsung dari database
 async function getCurrentUser(emailParam?: string) {
   try {

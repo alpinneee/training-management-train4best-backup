@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 // Fungsi untuk logging
 function logDebug(message: string, data?: any) {
   console.log(`[FORCE-LOGIN] ${message}`, data ? JSON.stringify(data) : '');

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const prisma = new PrismaClient();
 

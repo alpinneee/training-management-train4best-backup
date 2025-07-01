@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import { verify } from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
 import { format } from 'date-fns';
-
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 // Fungsi untuk logging
 function logDebug(message: string, data?: any) {
   console.log(`[DASHBOARD-API] ${message}`, data ? JSON.stringify(data, null, 2) : '');

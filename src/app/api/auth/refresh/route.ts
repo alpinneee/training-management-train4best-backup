@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { sign, verify } from "jsonwebtoken";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // Fungsi untuk logging
 function logDebug(message: string, data?: any) {

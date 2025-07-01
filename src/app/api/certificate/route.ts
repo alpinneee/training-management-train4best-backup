@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // Function to generate unique certificate number
 async function generateUniqueCertificateNumber(): Promise<string> {

@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const runtime = 'nodejs';
 
 import { NextResponse } from "next/server";
 import { sign } from "jsonwebtoken";
@@ -19,7 +20,15 @@ export async function GET(req: Request) {
     logDebug(`Direct dashboard access attempt for: ${email}, userType: ${userType}`);
     
     // Buat token JWT khusus dengan masa berlaku panjang
-    const secret = process.env.NEXTAUTH_SECRET || "RAHASIA_FALLBACK_YANG_AMAN_DAN_PANJANG_UNTUK_DEVELOPMENT";
+    const secret = process.env.NEXTAUTH_SECRET;
+    
+    if (!secret) {
+      logDebug('Missing NEXTAUTH_SECRET');
+      return NextResponse.json({
+        success: false,
+        error: "Konfigurasi server tidak lengkap"
+      }, { status: 500 });
+    }
     
     // Format userType dengan benar
     let formattedUserType = userType;
