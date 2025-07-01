@@ -1,3 +1,6 @@
+﻿export const dynamic = "force-dynamic";
+export const runtime = 'nodejs';
+
 import { NextResponse } from "next/server";
 import { sign } from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
@@ -14,7 +17,7 @@ export async function POST(req: Request) {
     logDebug(`Admin bypass attempt for: ${email}`);
     
     if (!email) {
-      logDebug('Missing email');
+      logDebug("Missing email");
       return NextResponse.json({
         success: false,
         error: "Email diperlukan"
@@ -36,8 +39,8 @@ export async function POST(req: Request) {
     }
     
     // Verifikasi bahwa user adalah admin
-    if (user.userType.usertype.toLowerCase() !== 'admin') {
-      logDebug(`User is not admin: ${email}, userType: ${user.userType.usertype}`);
+    if (!user.userType || user.userType.usertype.toLowerCase() !== "admin") {
+      logDebug(`User is not admin: ${email}, userType: ${user.userType?.usertype || "undefined"}`);
       return NextResponse.json({
         success: false,
         error: "User bukan admin"
@@ -47,7 +50,15 @@ export async function POST(req: Request) {
     logDebug(`Admin user verified: ${email}`);
     
     // Buat token JWT khusus admin dengan masa berlaku panjang
-    const secret = process.env.NEXTAUTH_SECRET || "RAHASIA_FALLBACK_YANG_AMAN_DAN_PANJANG_UNTUK_DEVELOPMENT";
+    const secret = process.env.NEXTAUTH_SECRET;
+    
+    if (!secret) {
+      logDebug("Missing NEXTAUTH_SECRET");
+      return NextResponse.json({
+        success: false,
+        error: "Konfigurasi server tidak lengkap"
+      }, { status: 500 });
+    }
     
     const tokenPayload = {
       id: user.id,
@@ -59,7 +70,7 @@ export async function POST(req: Request) {
       bypass: true
     };
     
-    logDebug(`Creating admin bypass token:`, tokenPayload);
+    logDebug("Creating admin bypass token:", tokenPayload);
     
     const token = sign(
       tokenPayload,
@@ -105,7 +116,7 @@ export async function POST(req: Request) {
     // Hapus cookie redirect_attempt jika ada
     response.cookies.set("redirect_attempt", "", { maxAge: 0 });
     
-    logDebug(`Admin bypass cookies set, returning response`);
+    logDebug("Admin bypass cookies set, returning response");
     return response;
   } catch (error) {
     console.error("Error admin bypass:", error);
@@ -115,4 +126,4 @@ export async function POST(req: Request) {
       details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 });
   }
-} 
+}
