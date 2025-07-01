@@ -1,3 +1,5 @@
+﻿export const runtime = 'nodejs';
+
 import { NextResponse } from "next/server";
 import { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
@@ -15,7 +17,7 @@ export async function POST(req: Request) {
     logDebug(`Login attempt for: ${email}`);
     
     if (!email || !password) {
-      logDebug('Missing email or password');
+      logDebug("Missing email or password");
       return NextResponse.json({
         success: false,
         error: "Email dan password diperlukan"
@@ -55,10 +57,10 @@ export async function POST(req: Request) {
     let userTypeFormatted = user.userType.usertype;
     
     // Penanganan khusus untuk tipe Admin
-    if (userTypeFormatted.toLowerCase() === 'admin') {
-      userTypeFormatted = 'Admin'; // Pastikan format Admin dengan A kapital
-    } else if (userTypeFormatted.toLowerCase() === 'participant') {
-      userTypeFormatted = 'Participant'; // Pastikan format Participant dengan P kapital
+    if (userTypeFormatted.toLowerCase() === "admin") {
+      userTypeFormatted = "Admin"; // Pastikan format Admin dengan A kapital
+    } else if (userTypeFormatted.toLowerCase() === "participant") {
+      userTypeFormatted = "Participant"; // Pastikan format Participant dengan P kapital
       // Add extra log to debug participant login
       logDebug(`Participant user detected, userType: ${userTypeFormatted}`);
     } else {
@@ -69,7 +71,16 @@ export async function POST(req: Request) {
     logDebug(`Formatted userType: ${userTypeFormatted} (original: ${user.userType.usertype})`);
     
     // Buat token JWT manual dengan secret yang valid
-    const secret = process.env.NEXTAUTH_SECRET || "e78d5a16cb1781adedf7dec940c51b54c97009a615dc7bafe078cb82c1b17fac";
+    const secret = process.env.NEXTAUTH_SECRET;
+    
+    if (!secret) {
+      logDebug("Missing NEXTAUTH_SECRET");
+      return NextResponse.json({
+        success: false,
+        error: "Konfigurasi server tidak lengkap"
+      }, { status: 500 });
+    }
+    
     logDebug(`Using secret: ${secret.substring(0, 5)}...`);
     
     const tokenPayload = {
@@ -79,7 +90,7 @@ export async function POST(req: Request) {
       userType: userTypeFormatted
     };
     
-    logDebug(`Token payload:`, tokenPayload);
+    logDebug("Token payload:", tokenPayload);
     
     const token = sign(
       tokenPayload,
@@ -90,30 +101,30 @@ export async function POST(req: Request) {
     logDebug(`Token generated, length: ${token.length}`);
     
     // Tentukan redirect URL berdasarkan userType
-    let redirectUrl = '/dashboard';
+    let redirectUrl = "/dashboard";
     const userTypeLower = userTypeFormatted.toLowerCase();
     
-    if (userTypeLower === 'admin') {
-      redirectUrl = '/dashboard'; // Admin ke dashboard
+    if (userTypeLower === "admin") {
+      redirectUrl = "/dashboard"; // Admin ke dashboard
       logDebug(`Admin user, setting redirect URL to: ${redirectUrl}`);
-    } else if (userTypeLower === 'instructure') {
-      redirectUrl = '/instructure/dashboard';
+    } else if (userTypeLower === "instructure") {
+      redirectUrl = "/instructure/dashboard";
       logDebug(`Instructure user, setting redirect URL to: ${redirectUrl}`);
-    } else if (userTypeLower === 'participant') {
+    } else if (userTypeLower === "participant") {
       // Cek apakah user sudah memiliki profil lengkap
       if (user.participant && user.participant.length > 0) {
-        redirectUrl = '/participant/dashboard';
+        redirectUrl = "/participant/dashboard";
         logDebug(`Participant user with complete profile, setting redirect URL to: ${redirectUrl}`);
       } else {
         // Jika belum memiliki profil lengkap, arahkan ke halaman profil
-        redirectUrl = '/profile';
+        redirectUrl = "/profile";
         logDebug(`Participant user without complete profile, redirecting to profile page: ${redirectUrl}`);
       }
       
       console.log(`CRITICAL: Participant user ${user.email} is being redirected to ${redirectUrl}`);
-    } else if (userTypeLower === 'unassigned') {
+    } else if (userTypeLower === "unassigned") {
       // Redirect unassigned users to profile page to complete their profile
-      redirectUrl = '/profile';
+      redirectUrl = "/profile";
       logDebug(`Unassigned user, redirecting to profile page: ${redirectUrl}`);
     }
     
@@ -171,12 +182,12 @@ export async function POST(req: Request) {
     logDebug(`Set user cookies for user: ${user.email}`);
     
     // Store user email in cookie if user is unassigned
-    if (userTypeLower === 'unassigned') {
+    if (userTypeLower === "unassigned") {
       logDebug(`Unassigned user, special handling for: ${user.email}`);
     }
     
     // Log untuk debugging khusus admin
-    if (userTypeLower === 'admin') {
+    if (userTypeLower === "admin") {
       logDebug(`ADMIN LOGIN: Setting up cookies and headers for admin user: ${user.email}`);
       logDebug(`ADMIN LOGIN: Redirect URL: ${redirectUrl}`);
     }
@@ -187,10 +198,10 @@ export async function POST(req: Request) {
     response.cookies.set("redirect_attempt", "", { maxAge: 0 });
     response.cookies.set("admin_token", "", { maxAge: 0 });
     
-    logDebug(`Old cookies cleared`);
+    logDebug("Old cookies cleared");
     
     // Penanganan khusus untuk admin
-    if (userTypeLower === 'admin') {
+    if (userTypeLower === "admin") {
       // Buat token khusus admin dengan expiry yang lebih lama
       const adminToken = sign(
         {
@@ -228,8 +239,8 @@ export async function POST(req: Request) {
         secure: process.env.NODE_ENV === "production"
       });
       
-      logDebug(`ADMIN LOGIN: Special admin cookies set`);
-    } else if (userTypeLower === 'participant') {
+      logDebug("ADMIN LOGIN: Special admin cookies set");
+    } else if (userTypeLower === "participant") {
       // Set participant-specific cookies
       console.log(`Setting participant-specific cookies for user: ${user.email}`);
       
@@ -290,7 +301,7 @@ export async function POST(req: Request) {
       });
     }
     
-    logDebug(`Cookies set: debug_token and next-auth.session-token`);
+    logDebug("Cookies set: debug_token and next-auth.session-token");
     
     // Set header untuk redirect
     response.headers.set(
@@ -302,19 +313,19 @@ export async function POST(req: Request) {
     response.headers.set("X-Redirect-URL", redirectUrl);
     
     // Log khusus admin
-    if (userTypeLower === 'admin') {
-      logDebug(`ADMIN LOGIN: Final response headers:`, Object.fromEntries(response.headers.entries()));
-      logDebug(`ADMIN LOGIN: Final cookies:`, response.cookies);
+    if (userTypeLower === "admin") {
+      logDebug("ADMIN LOGIN: Final response headers:", Object.fromEntries(response.headers.entries()));
+      logDebug("ADMIN LOGIN: Final cookies:", response.cookies);
     }
     
-    logDebug(`Response headers set, returning response`);
+    logDebug("Response headers set, returning response");
     return response;
   } catch (error) {
     console.error("Error login:", error);
     return NextResponse.json({
       success: false,
-      error: "Gagal melakukan login",
+      error: "Gagal login",
       details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 });
   }
-} 
+}

@@ -1,4 +1,5 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
+export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from "next/server";
 import { sign } from "jsonwebtoken";
@@ -12,7 +13,15 @@ export async function GET(request: NextRequest) {
     console.log(`Admin fix attempt for: ${email}`);
     
     // Buat token JWT khusus admin
-    const secret = process.env.NEXTAUTH_SECRET || "RAHASIA_FALLBACK_YANG_AMAN_DAN_PANJANG_UNTUK_DEVELOPMENT";
+    const secret = process.env.NEXTAUTH_SECRET;
+    
+    if (!secret) {
+      console.error('Missing NEXTAUTH_SECRET');
+      return NextResponse.json({
+        success: false,
+        error: "Konfigurasi server tidak lengkap"
+      }, { status: 500 });
+    }
     
     const tokenPayload = {
       id: "admin-fix-id",
@@ -73,4 +82,4 @@ export async function GET(request: NextRequest) {
       details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 });
   }
-} 
+}

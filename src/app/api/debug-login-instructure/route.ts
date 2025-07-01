@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+﻿export const runtime = 'nodejs';
+
+import { NextResponse } from "next/server";
 import { prisma } from '@/lib/prisma';
 import { sign } from 'jsonwebtoken';
 import { cookies } from 'next/headers';
@@ -6,7 +8,7 @@ import { cookies } from 'next/headers';
 export async function GET(request: Request) {
   try {
     console.log("Debug instructure login API called");
-    
+
     // Find the debug instructure user
     const user = await prisma.user.findUnique({
       where: { email: "debug.instructure@example.com" },
@@ -15,16 +17,25 @@ export async function GET(request: Request) {
         instructure: true
       }
     });
-
+    
     if (!user) {
       return NextResponse.json(
         { error: "Debug instructure user not found" },
         { status: 404 }
       );
     }
-
+    
     // Create a session token
-    const secret = process.env.NEXTAUTH_SECRET || "RAHASIA_FALLBACK_YANG_AMAN_DAN_PANJANG_UNTUK_DEVELOPMENT";
+    const secret = process.env.NEXTAUTH_SECRET;
+    
+    if (!secret) {
+      console.error("Missing NEXTAUTH_SECRET");
+      return NextResponse.json({
+        success: false,
+        error: "Konfigurasi server tidak lengkap"
+      }, { status: 500 });
+    }
+    
     const token = sign(
       {
         id: user.id,
@@ -35,7 +46,7 @@ export async function GET(request: Request) {
       secret,
       { expiresIn: '1d' }
     );
-
+    
     // Set cookies
     const cookieStore = cookies();
     cookieStore.set("next-auth.session-token", token, {
@@ -64,9 +75,9 @@ export async function GET(request: Request) {
       maxAge: 60 * 60 * 24, // 1 day
       path: "/"
     });
-
+    
     console.log("[DEBUG] Cookies set: debug_token and next-auth.session-token");
-
+    
     // Redirect to dashboard
     const response = NextResponse.redirect(new URL('/instructure/dashboard', request.url));
     
@@ -99,4 +110,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-} 
+}
