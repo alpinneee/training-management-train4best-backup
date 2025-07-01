@@ -1,3 +1,6 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import NextAuth from "next-auth/next"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
@@ -123,17 +126,6 @@ export const authOptions: AuthOptions = {
           console.log("Token userType before setting:", token.userType);
           session.user.userType = token.userType as string;
           console.log("Session userType after setting:", session.user.userType);
-          
-          // Store user info in localStorage via client-side script
-          if (typeof window !== 'undefined') {
-            try {
-              localStorage.setItem('userEmail', session.user.email);
-              localStorage.setItem('username', session.user.name);
-              console.log("NextAuth: Stored user data in localStorage");
-            } catch (e) {
-              console.error("NextAuth: Failed to store data in localStorage", e);
-            }
-          }
           
           // Log the final session object
           console.log("Final session object:", {
