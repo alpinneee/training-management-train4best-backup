@@ -74,7 +74,7 @@ export async function GET(req: Request) {
     console.log(`Found ${certificates.length} expired certificates`);
     
     // Format certificates for response
-    const formattedCertificates = certificates.map((cert, index) => {
+    const formattedCertificates = certificates.map((cert: any, index: number) => {
       // Debug log to see what's in the course object
       console.log(`Certificate ${cert.id} course:`, cert.course);
       
