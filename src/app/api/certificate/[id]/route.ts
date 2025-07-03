@@ -1,0 +1,221 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+interface Params {
+  params: {
+    id: string;
+  };
+}
+
+// GET /api/certificate/[id] - Get a specific certificate
+export async function GET(request: Request, { params }: Params) {
+  try {
+    const { id } = params;
+
+    const certificate = await prisma.certificate.findUnique({
+      where: { id },
+      include: {
+        participant: {
+          select: {
+            full_name: true,
+            company: true,
+            job_title: true,
+            user: {
+              select: {
+                email: true
+              }
+            }
+          },
+        },
+        instructure: {
+          select: {
+            full_name: true,
+            user: {
+              select: {
+                email: true
+              }
+            }
+          }
+        },
+        course: {
+          select: {
+            course_name: true,
+          },
+        },
+      },
+    });
+
+    if (!certificate) {
+      return NextResponse.json(
+        { error: "Certificate not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if certificate is expired and update status if needed
+    const today = new Date();
+    const expiryDate = new Date(certificate.expiryDate);
+    
+    // If certificate is expired but status is not set to "Expired"
+    if (expiryDate < today && certificate.status !== "Expired") {
+      console.log(`Certificate ${certificate.id} has expired. Updating status.`);
+      
+      // Update the status in the database
+      await prisma.certificate.update({
+        where: { id: certificate.id },
+        data: { status: "Expired" }
+      });
+      
+      // Update the status in the response
+      certificate.status = "Expired";
+    }
+
+    // Format the response
+    const formattedCertificate = {
+      id: certificate.id,
+      name: certificate.name || certificate.participant?.full_name || "Unknown",
+      certificateNumber: certificate.certificateNumber,
+      issueDate: certificate.issueDate.toISOString().split('T')[0],
+      expiryDate: certificate.expiryDate.toISOString().split('T')[0],
+      status: certificate.status,
+      pdfUrl: certificate.pdfUrl || null,
+      driveLink: certificate.driveLink || null,
+      email: certificate.participant?.user?.email || certificate.instructure?.user?.email || null,
+      participant: certificate.participant ? {
+        id: certificate.participantId,
+        name: certificate.participant.full_name,
+        company: certificate.participant.company,
+        jobTitle: certificate.participant.job_title,
+        email: certificate.participant.user?.email || null,
+      } : null,
+      course: certificate.course ? {
+        id: certificate.courseId,
+        name: certificate.course.course_name,
+      } : null,
+      createdAt: certificate.createdAt.toISOString(),
+      updatedAt: certificate.updatedAt.toISOString(),
+    };
+
+    return NextResponse.json(formattedCertificate);
+  } catch (error) {
+    console.error("Error fetching certificate:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch certificate" },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/certificate/[id] - Update a certificate
+export async function PUT(request: Request, { params }: Params) {
+  try {
+    const { id } = params;
+    const body = await request.json();
+    const { 
+      certificateNumber, 
+      name, 
+      issueDate, 
+      expiryDate, 
+      status, 
+      participantId, 
+      courseId,
+      driveLink
+    } = body;
+
+    // Check if certificate exists
+    const existingCertificate = await prisma.certificate.findUnique({
+      where: { id },
+    });
+
+    if (!existingCertificate) {
+      return NextResponse.json(
+        { error: "Certificate not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if certificate number is being changed and if it already exists
+    if (certificateNumber && certificateNumber !== existingCertificate.certificateNumber) {
+      const certificateWithSameNumber = await prisma.certificate.findUnique({
+        where: { certificateNumber },
+      });
+
+      if (certificateWithSameNumber && certificateWithSameNumber.id !== id) {
+        return NextResponse.json(
+          { error: "Certificate number already exists" },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Update certificate
+    const updatedCertificate = await prisma.certificate.update({
+      where: { id },
+      data: {
+        certificateNumber: certificateNumber || undefined,
+        name: name || undefined,
+        issueDate: issueDate ? new Date(issueDate) : undefined,
+        expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+        status: status || undefined,
+        driveLink,
+        participantId: participantId || undefined,
+        courseId: courseId || undefined,
+      },
+      include: {
+        participant: {
+          select: {
+            full_name: true,
+          },
+        },
+        course: {
+          select: {
+            course_name: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(updatedCertificate);
+  } catch (error) {
+    console.error("Error updating certificate:", error);
+    return NextResponse.json(
+      { error: "Failed to update certificate" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/certificate/[id] - Delete a certificate
+export async function DELETE(request: Request, { params }: Params) {
+  try {
+    const { id } = params;
+
+    // Check if certificate exists
+    const existingCertificate = await prisma.certificate.findUnique({
+      where: { id },
+    });
+
+    if (!existingCertificate) {
+      return NextResponse.json(
+        { error: "Certificate not found" },
+        { status: 404 }
+      );
+    }
+
+    // Delete certificate
+    await prisma.certificate.delete({
+      where: { id },
+    });
+
+    return NextResponse.json(
+      { message: "Certificate deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting certificate:", error);
+    return NextResponse.json(
+      { error: "Failed to delete certificate" },
+      { status: 500 }
+    );
+  }
+} 

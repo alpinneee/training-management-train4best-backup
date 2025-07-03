@@ -1,0 +1,271 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Certification {
+  id                 String             @id
+  certificate_number String             @unique(map: "Certification_certificate_number_key")
+  issue_date         DateTime
+  valid_date         DateTime
+  file_pdf           String
+  registrationId     String
+  courseregistration CourseRegistration @relation(fields: [registrationId], references: [id], map: "Certification_registrationId_fkey")
+
+  @@index([registrationId], map: "Certification_registrationId_fkey")
+  @@map("certification")
+}
+
+/// This model has been renamed to 'Class' during introspection, because the original name 'class' is reserved.
+model Class {
+  id                 String               @id
+  quota              Int
+  price              Float
+  status             String
+  start_reg_date     DateTime
+  end_reg_date       DateTime
+  duration_day       Int
+  start_date         DateTime
+  end_date           DateTime
+  location           String
+  room               String
+  courseId           String
+  course             Course               @relation(fields: [courseId], references: [id], map: "Class_courseId_fkey")
+  courseregistration CourseRegistration[]
+  instructureclass   InstructureClass[]
+  materials          CourseMaterial[]
+
+  @@index([courseId], map: "Class_courseId_fkey")
+  @@map("class")
+}
+
+model Course {
+  id           String        @id
+  courseTypeId String
+  course_name  String
+  description  String?       @db.Text
+  image        String?
+  certificates Certificate[]
+  class        Class[]
+  courseType   CourseType    @relation(fields: [courseTypeId], references: [id], map: "Course_courseTypeId_fkey")
+
+  @@index([courseTypeId], map: "Course_courseTypeId_fkey")
+  @@map("course")
+}
+
+model CourseRegistration {
+  id             String          @id
+  reg_date       DateTime
+  reg_status     String
+  payment        Float
+  payment_status String
+  payment_method String?
+  present_day    Int
+  classId        String
+  participantId  String
+  certification  Certification[]
+  class          Class           @relation(fields: [classId], references: [id], map: "CourseRegistration_classId_fkey")
+  participant    Participant     @relation(fields: [participantId], references: [id], map: "CourseRegistration_participantId_fkey")
+  payments       Payment[]
+  valuereport    ValueReport[]
+  attendance     Attendance[]
+
+  @@index([classId], map: "CourseRegistration_classId_fkey")
+  @@index([participantId], map: "CourseRegistration_participantId_fkey")
+  @@map("courseregistration")
+}
+
+model CourseType {
+  id          String   @id
+  course_type String
+  course      Course[]
+
+  @@map("coursetype")
+}
+
+model Instructure {
+  id               String             @id
+  full_name        String
+  photo            String?
+  phone_number     String
+  address          String
+  profiency        String
+  instructureclass InstructureClass[]
+  user             User[]
+  valuereport      ValueReport[]
+  certificates     Certificate[]      @relation("Certificate_instructureId_fkey")
+
+  @@map("instructure")
+}
+
+model InstructureClass {
+  id            String      @id
+  instructureId String
+  classId       String
+  class         Class       @relation(fields: [classId], references: [id], map: "InstructureClass_classId_fkey")
+  instructure   Instructure @relation(fields: [instructureId], references: [id], map: "InstructureClass_instructureId_fkey")
+
+  @@index([classId], map: "InstructureClass_classId_fkey")
+  @@index([instructureId], map: "InstructureClass_instructureId_fkey")
+  @@map("instructureclass")
+}
+
+model Participant {
+  id                 String               @id
+  full_name          String
+  photo              String?
+  address            String
+  phone_number       String
+  birth_date         DateTime
+  job_title          String?
+  company            String?
+  gender             String
+  userId             String
+  certificates       Certificate[]
+  courseregistration CourseRegistration[]
+  user               User                 @relation(fields: [userId], references: [id], map: "Participant_userId_fkey")
+
+  @@index([userId], map: "Participant_userId_fkey")
+  @@map("participant")
+}
+
+model User {
+  id            String        @id
+  email         String        @unique(map: "User_email_key")
+  password      String
+  instructureId String?
+  last_login    DateTime?
+  token         String?
+  userTypeId    String
+  username      String        @unique(map: "User_username_key")
+  participant   Participant[]
+  instructure   Instructure?  @relation(fields: [instructureId], references: [id], map: "User_instructureId_fkey")
+  userType      UserType      @relation(fields: [userTypeId], references: [id], map: "User_userTypeId_fkey")
+
+  @@index([instructureId], map: "User_instructureId_fkey")
+  @@index([userTypeId], map: "User_userTypeId_fkey")
+  @@map("user")
+}
+
+model UserType {
+  id          String  @id
+  usertype    String
+  description String?
+  status      String? @default("Active")
+  user        User[]
+
+  @@map("usertype")
+}
+
+model ValueReport {
+  id                 String             @id
+  value              Float
+  value_type         String
+  remark             String?
+  registrationId     String
+  instructureId      String
+  instructure        Instructure        @relation(fields: [instructureId], references: [id], map: "ValueReport_instructureId_fkey")
+  courseregistration CourseRegistration @relation(fields: [registrationId], references: [id], map: "ValueReport_registrationId_fkey")
+
+  @@index([instructureId], map: "ValueReport_instructureId_fkey")
+  @@index([registrationId], map: "ValueReport_registrationId_fkey")
+  @@map("valuereport")
+}
+
+model Certificate {
+  id                String       @id @default(uuid())
+  certificateNumber String       @unique
+  name              String
+  issueDate         DateTime
+  expiryDate        DateTime
+  status            String       @default("Valid")
+  participantId     String?
+  instructureId     String?
+  courseId          String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  pdfUrl            String?
+  driveLink         String?
+  course            Course?      @relation(fields: [courseId], references: [id], map: "Certificate_courseId_fkey")
+  participant       Participant? @relation(fields: [participantId], references: [id], map: "Certificate_participantId_fkey")
+  instructure       Instructure? @relation(fields: [instructureId], references: [id], map: "Certificate_instructureId_fkey", name: "Certificate_instructureId_fkey")
+
+  @@index([courseId], map: "Certificate_courseId_fkey")
+  @@index([participantId], map: "Certificate_participantId_fkey")
+  @@index([instructureId], map: "Certificate_instructureId_fkey")
+  @@map("certificate")
+}
+
+model Payment {
+  id              String             @id @default(uuid())
+  paymentDate     DateTime
+  amount          Float
+  paymentMethod   String
+  referenceNumber String             @unique
+  status          String
+  registrationId  String
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  paymentProof    String?
+  registration    CourseRegistration @relation(fields: [registrationId], references: [id], map: "Payment_registrationId_fkey")
+
+  @@index([registrationId], map: "Payment_registrationId_fkey")
+  @@map("payment")
+}
+
+model BankAccount {
+  id            String   @id @default(uuid())
+  bankName      String
+  accountNumber String
+  accountName   String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("bankaccount")
+}
+
+model SystemSetting {
+  id         String   @id @default(uuid())
+  settingKey String   @unique
+  value      String   @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("systemsetting")
+}
+
+model CourseMaterial {
+  id             String   @id @default(uuid())
+  title          String
+  description    String?  @db.Text
+  fileUrl        String
+  day            Int
+  size           Int?
+  isGoogleDrive  Boolean  @default(false)
+  courseScheduleId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  class          Class    @relation(fields: [courseScheduleId], references: [id], map: "CourseMaterial_courseScheduleId_fkey")
+
+  @@index([courseScheduleId], map: "CourseMaterial_courseScheduleId_fkey")
+  @@map("coursematerial")
+}
+
+model Attendance {
+  id             String   @id @default(uuid())
+  registrationId String
+  date           DateTime @default(now())
+  status         String   // "present" atau "absent"
+  mode           String   // "online" atau "offline"
+  createdBy      String?  // id admin/instructure yang mengabsen (opsional)
+  registration   CourseRegistration @relation(fields: [registrationId], references: [id])
+  
+  @@index([registrationId])
+  @@map("attendance")
+}
