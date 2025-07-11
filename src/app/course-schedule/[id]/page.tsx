@@ -231,10 +231,10 @@ const CourseScheduleDetail = () => {
   // Tambah state untuk edit dan delete attendance
   const [isEditAttendanceModalOpen, setIsEditAttendanceModalOpen] =
     useState(false);
-  const [editAttendanceData, setEditAttendanceData] = useState(null);
+  const [editAttendanceData, setEditAttendanceData] = useState<any>(null);
   const [isDeleteAttendanceModalOpen, setIsDeleteAttendanceModalOpen] =
     useState(false);
-  const [deleteAttendanceId, setDeleteAttendanceId] = useState(null);
+  const [deleteAttendanceId, setDeleteAttendanceId] = useState<any>(null);
   const [attendanceActionLoading, setAttendanceActionLoading] = useState(false);
 
   // Tambahkan state untuk modal sertifikat instructure
@@ -495,6 +495,63 @@ const CourseScheduleDetail = () => {
     fetchCourseSchedule();
     fetchAllInstructors();
   }, [scheduleId]);
+
+  // Fungsi untuk memperbarui jumlah kehadiran untuk semua peserta
+  const updateAllAttendanceCounts = async () => {
+    if (!courseDetails?.participants?.length) return;
+
+    for (const participant of courseDetails.participants) {
+      try {
+        const response = await fetch(
+          `/api/course-schedule/${scheduleId}/participant/attendance?participantId=${participant.participantId}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const presentCount = (data.attendances || []).filter(
+            (att: any) => att.status === "present"
+          ).length;
+
+          // Update presentDay di database
+          await fetch(
+            `/api/course-schedule/${scheduleId}/participant/update-present-day`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                participantId: participant.participantId,
+                presentDay: presentCount,
+              }),
+            }
+          );
+
+          // Update presentDay di UI
+          setCourseDetails((prevDetails) => {
+            if (!prevDetails) return null;
+            return {
+              ...prevDetails,
+              participants: prevDetails.participants.map((p) =>
+                p.participantId === participant.participantId
+                  ? { ...p, presentDay: `${presentCount} days` }
+                  : p
+              )
+            } as CourseSchedule;
+          });
+        }
+      } catch (error) {
+        console.error(
+          `Error updating attendance for ${participant.name}:`,
+          error
+        );
+      }
+    }
+  };
+
+  // Perbarui jumlah kehadiran saat data peserta tersedia
+  useEffect(() => {
+    if (courseDetails?.participants?.length && courseDetails.participants.length > 0) {
+      updateAllAttendanceCounts();
+    }
+  }, [courseDetails?.participants]);
 
   useEffect(() => {
     if (courseDetails?.instructures) {
@@ -913,6 +970,86 @@ const CourseScheduleDetail = () => {
     }
   };
 
+  // Function to send certificate email manually
+  const handleSendCertificateEmail = async () => {
+    if (!selectedParticipantForCertificate) {
+      toast.error("No participant selected");
+      return;
+    }
+
+    setCertificateLoading(true);
+    try {
+      // Use the dedicated send-email endpoint
+      const response = await fetch(
+        `/api/course-schedule/${scheduleId}/participant/certificate/send-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            participantId: selectedParticipantForCertificate.participantId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send certificate email");
+      }
+
+      toast.success(`Certificate email sent successfully to ${data.email}!`);
+    } catch (error) {
+      console.error("Error sending certificate email:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send certificate email"
+      );
+    } finally {
+      setCertificateLoading(false);
+    }
+  };
+
+  // Function to send certificate email manually for instructor
+  const handleSendInstructureCertificateEmail = async () => {
+    if (!selectedInstructureForCertificate) {
+      toast.error("No instructor selected");
+      return;
+    }
+
+    setInstructureCertificateLoading(true);
+    try {
+      // Use the dedicated send-email endpoint for instructor
+      const response = await fetch(
+        `/api/course-schedule/${scheduleId}/instructure/certificate/send-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            instructureId: selectedInstructureForCertificate.instructureId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send certificate email");
+      }
+
+      toast.success(`Certificate email sent successfully to ${data.email}!`);
+    } catch (error) {
+      console.error("Error sending instructor certificate email:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send certificate email"
+      );
+    } finally {
+      setInstructureCertificateLoading(false);
+    }
+  };
+
   const handleOpenRegistrationModal = async (participant: Participant) => {
     setSelectedParticipantForRegistration(participant);
     setIsRegistrationModalOpen(true);
@@ -1251,6 +1388,12 @@ const CourseScheduleDetail = () => {
       console.log(
         `Fetching details for participant: ${participant.participantId}`
       );
+
+      // Periksa apakah participant.participantId ada sebelum melakukan fetch
+      if (!participant.participantId) {
+        throw new Error("Participant ID tidak ditemukan");
+      }
+
       const response = await fetch(
         `/api/course-schedule/${scheduleId}/participant/detail?participantId=${participant.participantId}`
       );
@@ -1267,6 +1410,15 @@ const CourseScheduleDetail = () => {
 
       const data = await response.json();
       console.log("Detail data received:", data);
+
+      // Pastikan data yang diterima valid
+      if (
+        !data ||
+        (typeof data === "object" && Object.keys(data).length === 0)
+      ) {
+        throw new Error("Data tidak ditemukan atau kosong");
+      }
+
       setDetailData(data);
     } catch (error) {
       console.error("Error fetching participant details:", error);
@@ -1316,9 +1468,26 @@ const CourseScheduleDetail = () => {
         const data = await response.json();
         throw new Error(data.error || "Failed to submit attendance");
       }
-      setIsAbsenModalOpen(false);
+
+      const data = await response.json();
+
+              // Update presentDay di UI
+        if (data.presentCount !== undefined) {
+          setCourseDetails((prevDetails) => {
+            if (!prevDetails) return null;
+            return {
+              ...prevDetails,
+              participants: prevDetails.participants.map((p) =>
+                p.participantId === selectedAbsenParticipant?.participantId
+                  ? { ...p, presentDay: `${data.presentCount} days` }
+                  : p
+              )
+            } as CourseSchedule;
+          });
+        }
+
+      setIsAbsenModalOpen(false); 
       setSelectedAbsenParticipant(null);
-      fetchCourseSchedule();
     } catch (err: any) {
       setAbsenError(err.message || "Failed to submit attendance");
     } finally {
@@ -1341,6 +1510,30 @@ const CourseScheduleDetail = () => {
       }
       const data = await response.json();
       setAttendanceDetail(data.attendances || []);
+
+      // Hitung jumlah kehadiran dengan status "present"
+      const presentCount = (data.attendances || []).filter(
+        (att: any) => att.status === "present"
+      ).length;
+
+      // Update presentDay di UI
+      setCourseDetails((prevDetails) => {
+        if (!prevDetails) return prevDetails;
+        return prevDetails as CourseSchedule;
+      });
+
+      // Perbarui nilai present_day di database
+      await fetch(
+        `/api/course-schedule/${scheduleId}/participant/update-present-day`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            participantId: participant.participantId,
+            presentDay: presentCount,
+          }),
+        }
+      );
     } catch (err: any) {
       setAttendanceDetailError(
         err.message || "Failed to fetch attendance detail"
@@ -1351,17 +1544,17 @@ const CourseScheduleDetail = () => {
   };
 
   // Handler buka modal edit
-  const handleOpenEditAttendance = (att) => {
+  const handleOpenEditAttendance = (att: any) => {
     setEditAttendanceData({ ...att });
     setIsEditAttendanceModalOpen(true);
   };
   // Handler buka modal delete
-  const handleOpenDeleteAttendance = (id) => {
+  const handleOpenDeleteAttendance = (id: any) => {
     setDeleteAttendanceId(id);
     setIsDeleteAttendanceModalOpen(true);
   };
   // Handler update attendance
-  const handleUpdateAttendance = async (e) => {
+  const handleUpdateAttendance = async (e: any) => {
     e.preventDefault();
     setAttendanceActionLoading(true);
     try {
@@ -1384,11 +1577,31 @@ const CourseScheduleDetail = () => {
         }
       );
       if (!res.ok) throw new Error("Failed to update attendance");
+
+      const data = await res.json();
+
+      // Update presentDay di UI
+      if (data.presentCount !== undefined && selectedAttendanceParticipant) {
+        setCourseDetails((prevDetails) => {
+          if (!prevDetails) return null;
+          return {
+            ...prevDetails,
+            participants: prevDetails.participants.map((p) =>
+              p.participantId === selectedAttendanceParticipant?.participantId
+                ? { ...p, presentDay: `${data.presentCount} days` }
+                : p
+            )
+          } as CourseSchedule;
+        });
+      }
+
       setIsEditAttendanceModalOpen(false);
       setEditAttendanceData(null);
-      await handleOpenAttendanceDetail(selectedAttendanceParticipant);
+      if (selectedAttendanceParticipant) {
+        await handleOpenAttendanceDetail(selectedAttendanceParticipant);
+      }
     } catch (err) {
-      alert(err.message);
+      alert(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setAttendanceActionLoading(false);
     }
@@ -1406,11 +1619,31 @@ const CourseScheduleDetail = () => {
         }
       );
       if (!res.ok) throw new Error("Failed to delete attendance");
+
+      const data = await res.json();
+
+      // Update presentDay di UI
+      if (data.presentCount !== undefined && selectedAttendanceParticipant) {
+        setCourseDetails((prevDetails) => {
+          if (!prevDetails) return null;
+          return {
+            ...prevDetails,
+            participants: prevDetails.participants.map((p) =>
+              p.participantId === selectedAttendanceParticipant?.participantId
+                ? { ...p, presentDay: `${data.presentCount} days` }
+                : p
+            )
+          } as CourseSchedule;
+        });
+      }
+
       setIsDeleteAttendanceModalOpen(false);
       setDeleteAttendanceId(null);
-      await handleOpenAttendanceDetail(selectedAttendanceParticipant);
-    } catch (err) {
-      alert(err.message);
+      if (selectedAttendanceParticipant) {
+        await handleOpenAttendanceDetail(selectedAttendanceParticipant);
+      }
+    } catch (err) {       
+      alert(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setAttendanceActionLoading(false);
     }
@@ -1878,7 +2111,7 @@ const CourseScheduleDetail = () => {
                 onClick={() => setIsInstructorSelectionModalOpen(true)}
                 className="w-full sm:w-auto text-xs"
               >
-                Manage Instructors
+                Add Instructors
               </Button>
               <div className="text-xs text-gray-600">
                 {courseDetails.instructures.length} Instructors
@@ -2580,6 +2813,28 @@ const CourseScheduleDetail = () => {
                   )}
                 </button>
               </div>
+              
+              {/* Send Email Button - Only show if certificate exists */}
+              {certificateData.certificateNumber && (
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-gray-600">
+                      Send certificate notification to participant
+                    </p>
+                    <button
+                      type="button"
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 flex items-center gap-2"
+                      onClick={handleSendCertificateEmail}
+                      disabled={certificateLoading}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      Send Email
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </Modal>
         )}
@@ -2856,8 +3111,17 @@ const CourseScheduleDetail = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
             ) : detailError ? (
-              <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-2 rounded text-xs">
-                {detailError}
+              <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded text-sm">
+                <p className="font-medium">Error:</p>
+                <p className="mb-3">{detailError}</p>
+                <div className="flex justify-center">
+                  <button
+                    className="bg-blue-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-600"
+                    onClick={() => setIsDetailModalOpen(false)}
+                  >
+                    Tutup
+                  </button>
+                </div>
               </div>
             ) : detailData ? (
               <div className="space-y-6">
@@ -2881,32 +3145,38 @@ const CourseScheduleDetail = () => {
                   <h3 className="font-medium mb-2 text-gray-700">
                     Personal Information
                   </h3>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <p className="text-gray-500">Full Name</p>
-                      <p className="text-gray-700">
-                        {detailData?.personalInfo?.name}
-                      </p>
+                  {detailData?.personalInfo ? (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <p className="text-gray-500">Full Name</p>
+                        <p className="text-gray-700">
+                          {detailData?.personalInfo?.name || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Email</p>
+                        <p className="text-gray-700">
+                          {detailData?.personalInfo?.email || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Phone</p>
+                        <p className="text-gray-700">
+                          {detailData?.personalInfo?.phone || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Address</p>
+                        <p className="text-gray-700">
+                          {detailData?.personalInfo?.address || "N/A"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-gray-500">Email</p>
-                      <p className="text-gray-700">
-                        {detailData?.personalInfo?.email}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Phone</p>
-                      <p className="text-gray-700">
-                        {detailData?.personalInfo?.phone}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Address</p>
-                      <p className="text-gray-700">
-                        {detailData?.personalInfo?.address}
-                      </p>
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-xs text-gray-500">
+                      Informasi personal tidak tersedia
+                    </p>
+                  )}
                 </div>
 
                 {/* Course Information */}
@@ -2914,51 +3184,57 @@ const CourseScheduleDetail = () => {
                   <h3 className="font-medium mb-2 text-gray-700">
                     Course Information
                   </h3>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <p className="text-gray-500">Present Days</p>
-                      <p className="text-gray-700">
-                        {detailData?.courseInfo?.presentDays}
-                      </p>
+                  {detailData?.courseInfo ? (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <p className="text-gray-500">Present Days</p>
+                        <p className="text-gray-700">
+                          {detailData?.courseInfo?.presentDays || "0"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Total Days</p>
+                        <p className="text-gray-700">
+                          {detailData?.courseInfo?.totalDays || "0"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Payment Status</p>
+                        <p
+                          className={`${
+                            detailData?.courseInfo?.paymentStatus === "Paid"
+                              ? "text-green-600"
+                              : detailData?.courseInfo?.paymentStatus ===
+                                "Partial"
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {detailData?.courseInfo?.paymentStatus || "Unpaid"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Registration Status</p>
+                        <p className="text-gray-700">
+                          {detailData?.courseInfo?.regStatus || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Joined Date</p>
+                        <p className="text-gray-700">
+                          {detailData?.courseInfo?.joinedDate
+                            ? new Date(
+                                detailData.courseInfo.joinedDate
+                              ).toLocaleDateString()
+                            : "N/A"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-gray-500">Total Days</p>
-                      <p className="text-gray-700">
-                        {detailData?.courseInfo?.totalDays}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Payment Status</p>
-                      <p
-                        className={`${
-                          detailData?.courseInfo?.paymentStatus === "Paid"
-                            ? "text-green-600"
-                            : detailData?.courseInfo?.paymentStatus ===
-                              "Partial"
-                            ? "text-yellow-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {detailData?.courseInfo?.paymentStatus}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Registration Status</p>
-                      <p className="text-gray-700">
-                        {detailData?.courseInfo?.regStatus}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Joined Date</p>
-                      <p className="text-gray-700">
-                        {detailData?.courseInfo?.joinedDate
-                          ? new Date(
-                              detailData.courseInfo.joinedDate
-                            ).toLocaleDateString()
-                          : ""}
-                      </p>
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-xs text-gray-500">
+                      Informasi kursus tidak tersedia
+                    </p>
+                  )}
                 </div>
 
                 {/* Payment Information */}
@@ -2966,165 +3242,44 @@ const CourseScheduleDetail = () => {
                   <h3 className="font-medium mb-2 text-gray-700">
                     Payment Information
                   </h3>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <p className="text-gray-500">Amount Paid</p>
-                      <p className="text-gray-700">
-                        {detailData?.courseInfo?.payment?.amount?.toLocaleString()}{" "}
-                        Rp
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Total Price</p>
-                      <p className="text-gray-700">
-                        {detailData?.courseInfo?.payment?.total?.toLocaleString()}{" "}
-                        Rp
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Payment Method</p>
-                      <p className="text-gray-700">
-                        {detailData?.courseInfo?.payment?.method}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Payment Date</p>
-                      <p className="text-gray-700">
-                        {detailData?.courseInfo?.payment?.date
-                          ? new Date(
-                              detailData.courseInfo.payment.date
-                            ).toLocaleDateString()
-                          : "Not paid yet"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Payment Proof */}
-                  {detailData?.courseInfo?.payment?.proofUrl && (
-                    <div className="mt-3">
-                      <p className="text-gray-500 text-xs mb-2">
-                        Payment Proof
-                      </p>
-                      <div className="border rounded-md p-2">
-                        <a
-                          href={detailData.courseInfo.payment.proofUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block"
-                        >
-                          <img
-                            src={detailData.courseInfo.payment.proofUrl}
-                            alt="Payment Proof"
-                            className="w-full max-h-48 object-contain rounded"
-                          />
-                          <div className="mt-1 flex justify-between items-center">
-                            <span className="text-xs text-blue-600">
-                              View Full Image
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {detailData.courseInfo.payment.verifiedAt
-                                ? `Verified on ${new Date(
-                                    detailData.courseInfo.payment.verifiedAt
-                                  ).toLocaleDateString()}`
-                                : "Not verified yet"}
-                            </span>
-                          </div>
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Progress */}
-                <div>
-                  <h3 className="font-medium mb-2 text-gray-700">Progress</h3>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                    <div
-                      className="bg-blue-600 h-2.5 rounded-full"
-                      style={{
-                        width: `${detailData?.progressInfo?.percentage || 0}%`,
-                      }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    {detailData?.progressInfo?.days.present} of{" "}
-                    {detailData?.progressInfo?.days.total} days (
-                    {detailData?.progressInfo?.percentage || 0}%)
-                  </p>
-                </div>
-
-                {/* Certificate */}
-                <div>
-                  <h3 className="font-medium mb-2 text-gray-700">
-                    Certificate
-                  </h3>
-                  {detailData?.certificateInfo ? (
+                  {detailData?.courseInfo?.payment ? (
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <p className="text-gray-500">Certificate Number</p>
+                        <p className="text-gray-500">Amount Paid</p>
                         <p className="text-gray-700">
-                          {detailData.certificateInfo.number}
+                          {detailData?.courseInfo?.payment?.amount
+                            ? `${detailData.courseInfo.payment.amount.toLocaleString()} Rp`
+                            : "0 Rp"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-500">Issue Date</p>
+                        <p className="text-gray-500">Total Price</p>
                         <p className="text-gray-700">
-                          {new Date(
-                            detailData.certificateInfo.issueDate
-                          ).toLocaleDateString()}
+                          {detailData?.courseInfo?.payment?.total
+                            ? `${detailData.courseInfo.payment.total.toLocaleString()} Rp`
+                            : "0 Rp"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Payment Method</p>
+                        <p className="text-gray-700">
+                          {detailData?.courseInfo?.payment?.method || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Payment Date</p>
+                        <p className="text-gray-700">
+                          {detailData?.courseInfo?.payment?.date
+                            ? new Date(
+                                detailData.courseInfo.payment.date
+                              ).toLocaleDateString()
+                            : "Not paid yet"}
                         </p>
                       </div>
                     </div>
                   ) : (
                     <p className="text-xs text-gray-500">
-                      No certificate issued yet
-                    </p>
-                  )}
-                </div>
-
-                {/* Test Results */}
-                <div>
-                  <h3 className="font-medium mb-2 text-gray-700">
-                    Test Results
-                  </h3>
-                  {detailData?.testResults &&
-                  detailData.testResults.length > 0 ? (
-                    <div className="space-y-2">
-                      {detailData.testResults.map(
-                        (test: {
-                          id: string;
-                          type: string;
-                          remark: string;
-                          value: number;
-                          maxValue: number;
-                        }) => (
-                          <div key={test.id} className="text-xs">
-                            <div className="flex justify-between mb-1">
-                              <span className="text-gray-700">
-                                {test.type}{" "}
-                                {test.remark ? `(${test.remark})` : ""}
-                              </span>
-                              <span className="font-medium text-gray-700">
-                                {test.value} / {test.maxValue}
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-1.5">
-                              <div
-                                className="bg-green-600 h-1.5 rounded-full"
-                                style={{
-                                  width: `${
-                                    (test.value / test.maxValue) * 100
-                                  }%`,
-                                }}
-                              ></div>
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-gray-500">
-                      No test results available
+                      Informasi pembayaran tidak tersedia
                     </p>
                   )}
                 </div>
@@ -3690,6 +3845,28 @@ const CourseScheduleDetail = () => {
                     )}
                   </button>
                 </div>
+                
+                {/* Send Email Button for Instructor - Only show if certificate exists */}
+                {instructureCertificateData.certificateNumber && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-gray-600">
+                        Send certificate notification to instructor
+                      </p>
+                      <button
+                        type="button"
+                        className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 flex items-center gap-2"
+                        onClick={handleSendInstructureCertificateEmail}
+                        disabled={instructureCertificateLoading}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Send Email
+                      </button>
+                    </div>
+                  </div>
+                )}
               </form>
             </Modal>
           )}

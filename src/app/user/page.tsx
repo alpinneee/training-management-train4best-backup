@@ -6,6 +6,8 @@ import Button from "@/components/common/button";
 import Modal from "@/components/common/Modal";
 import Table from "@/components/common/table";
 import { toast } from "react-hot-toast";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -26,6 +28,12 @@ interface Column {
 }
 
 const UserPage = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Declare all state variables at the top level, regardless of authorization status
   const [users, setUsers] = useState<User[]>([]);
   const [userTypes, setUserTypes] = useState<UserType[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,19 +54,70 @@ const UserPage = () => {
 
   const itemsPerPage = 10;
 
-  // Fetch users and user types on component mount
+  // Check if user is authenticated as admin
   useEffect(() => {
-    fetchUsers();
-    fetchUserTypes();
+    const checkAdminAccess = async () => {
+      setIsLoading(true);
+      
+      // Check localStorage for admin flag (used by direct-login)
+      const adminLoginTimestamp = localStorage.getItem("admin_login_timestamp");
+      const adminEmail = localStorage.getItem("admin_email");
+      
+      if (adminLoginTimestamp && adminEmail) {
+        console.log("Found admin login data in localStorage");
+        setIsAdmin(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Check NextAuth session
+      if (status === "authenticated" && session?.user) {
+        const userType = String(session.user.userType || "").toLowerCase();
+        if (userType === "admin" || userType.includes("admin")) {
+          console.log("Admin access granted via NextAuth session");
+          setIsAdmin(true);
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      // If no admin access found and session is loaded, redirect
+      if (status !== "loading") {
+        console.log("No admin access found, redirecting");
+        toast.error("You don't have permission to access this page");
+        
+        // Check if we have any user type info to redirect appropriately
+        const userType = session?.user?.userType?.toLowerCase();
+        if (userType?.includes("instruct")) {
+          router.replace("/instructure/dashboard");
+        } else if (userType?.includes("participant")) {
+          router.replace("/participant/dashboard");
+        } else {
+          router.replace("/login");
+        }
+      }
+      
+      setIsLoading(false);
+    };
     
-    // Set up periodic refresh of user data
-    const refreshInterval = setInterval(() => {
+    checkAdminAccess();
+  }, [status, session, router]);
+
+  // Fetch users and user types on component mount (only if admin)
+  useEffect(() => {
+    if (isAdmin && !isLoading) {
       fetchUsers();
-    }, 5000); // Refresh every 5 seconds
-    
-    // Clean up interval on unmount
-    return () => clearInterval(refreshInterval);
-  }, []);
+      fetchUserTypes();
+      
+      // Set up periodic refresh of user data
+      const refreshInterval = setInterval(() => {
+        fetchUsers();
+      }, 5000); // Refresh every 5 seconds
+      
+      // Clean up interval on unmount
+      return () => clearInterval(refreshInterval);
+    }
+  }, [isAdmin, isLoading]);
 
   const fetchUserTypes = async () => {
     try {
@@ -140,6 +199,22 @@ const UserPage = () => {
       setLoading(false);
     }
   };
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center py-60">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  // If not admin, don't render anything (redirect will happen)
+  if (!isAdmin) {
+    return null;
+  }
 
   // Get unique roles from users
   const uniqueRoles = Array.from(new Set(users.map(user => user.role)));
@@ -379,10 +454,36 @@ const UserPage = () => {
   return (
     <Layout>
       <div className="p-4">
-        {/* Navigation Links */}
-
-
-        <h1 className="text-2xl mb-4 text-gray-700">User Management</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl text-gray-700">User Management</h1>
+          
+          {/* Debug button for admin access */}
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/force-login?userType=admin');
+                const data = await response.json();
+                
+                if (data.success) {
+                  toast.success("Admin access refreshed");
+                  // Store admin data in localStorage
+                  localStorage.setItem("admin_login_timestamp", Date.now().toString());
+                  localStorage.setItem("admin_email", data.user?.email || "admin@example.com");
+                  // Reload the page
+                  window.location.reload();
+                } else {
+                  toast.error("Failed to refresh admin access");
+                }
+              } catch (error) {
+                console.error("Error refreshing admin access:", error);
+                toast.error("Error refreshing admin access");
+              }
+            }}
+            className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded"
+          >
+            Refresh Admin Access
+          </button>
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-2 text-gray-700 w-full sm:w-auto mb-4 justify-end">
             <select
@@ -511,8 +612,6 @@ const UserPage = () => {
                   size="small"
                   onClick={() => {
                     if (selectedUser) {
-                      // Handle promotion to instructor
-                      // You'll need to implement this function
                       promoteToInstructor(selectedUser);
                     } else {
                       toast.error("Please select a user first");
@@ -543,7 +642,6 @@ const UserPage = () => {
                     onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
                     className="w-full px-2 py-1 text-xs rounded border border-gray-300 text-gray-700"
                     required
-                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -554,7 +652,6 @@ const UserPage = () => {
                     onChange={(e) => setNewUser({ ...newUser, jobTitle: e.target.value })}
                     className="w-full px-2 py-1 text-xs rounded border border-gray-300 text-gray-700"
                     required
-                    disabled={loading}
                   >
                     <option value="">Select Role</option>
                     {userTypes.map((type) => (
@@ -573,7 +670,6 @@ const UserPage = () => {
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                     className="w-full px-2 py-1 text-xs rounded border border-gray-300 text-gray-700"
                     placeholder="Leave empty to keep current password"
-                    disabled={loading}
                   />
                   <p className="text-xs text-gray-500 mt-1">Leave empty to keep current password</p>
                 </div>
@@ -583,7 +679,6 @@ const UserPage = () => {
                     size="small"
                     onClick={() => setIsEditModalOpen(false)}
                     className="text-xs px-2 py-1"
-                    disabled={loading}
                   >
                     Cancel
                   </Button>
@@ -592,7 +687,6 @@ const UserPage = () => {
                     size="small"
                     type="submit"
                     className="text-xs px-2 py-1"
-                    disabled={loading}
                   >
                     {loading ? "Saving..." : "Save Changes"}
                   </Button>
@@ -619,7 +713,6 @@ const UserPage = () => {
                   size="small"
                   onClick={() => setIsDeleteModalOpen(false)}
                   className="text-xs px-2 py-1"
-                  disabled={loading}
                 >
                   Cancel
                 </Button>
@@ -629,7 +722,6 @@ const UserPage = () => {
                     size="small"
                     onClick={() => handleDelete(true)}
                     className="text-xs px-2 py-1"
-                    disabled={loading}
                   >
                     Force Delete
                   </Button>
@@ -638,8 +730,7 @@ const UserPage = () => {
                     variant="red"
                     size="small"
                     onClick={() => handleDelete()}
-                    className="text-xs px-2 py-1"
-                    disabled={loading}
+                    className="text-xs px-2 py-1" 
                   >
                     {loading ? "Deleting..." : "Delete"}
                   </Button>
@@ -654,3 +745,4 @@ const UserPage = () => {
 };
 
 export default UserPage;
+

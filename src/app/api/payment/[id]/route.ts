@@ -107,7 +107,8 @@ export async function GET(request: Request, { params }: Params) {
             include: {
               course: true
             }
-          }
+          },
+          payments: true // <-- Add this line
         }
       });
       
@@ -144,6 +145,10 @@ export async function GET(request: Request, { params }: Params) {
           createdAt: registration.reg_date?.toISOString(),
           updatedAt: new Date().toISOString(),
           jumlah: `Rp${paymentAmount.toLocaleString('id-ID')}`,
+          // Check if there are payments with payment proof
+          paymentProof: registration.payments && registration.payments.length > 0 
+            ? registration.payments[0].paymentProof || null 
+            : null,
         };
         
         console.log('Returning formatted registration as payment:', formattedRegistration);
@@ -189,6 +194,7 @@ export async function GET(request: Request, { params }: Params) {
       createdAt: payment.createdAt?.toISOString(),
       updatedAt: payment.updatedAt?.toISOString(),
       jumlah: `Rp${paymentAmount.toLocaleString('id-ID')}`, // Format amount with Indonesian format
+      paymentProof: payment.paymentProof || null, // Add payment proof URL
     };
     
     console.log('Returning formatted payment:', formattedPayment);

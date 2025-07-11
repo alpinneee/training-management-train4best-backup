@@ -33,10 +33,10 @@ export async function POST(req: Request) {
     // Ensure default roles exist before registration
     await ensureDefaultRolesExist();
     
-    const { firstName, lastName, email, password } = await req.json();
+    const { fullName, email, password } = await req.json();
     
     // Validasi input
-    if (!firstName || !lastName || !email || !password) {
+    if (!fullName || !email || !password) {
       return NextResponse.json(
         { error: "Semua field harus diisi" },
         { status: 400 }
@@ -67,8 +67,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate username dari email
-    const username = email.split('@')[0];
+    // Gunakan fullName sebagai username, bukan email
+    const username = fullName;
 
     // Hash password
     const hashedPassword = await hash(password, 12);
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
         id: user.id,
         username: user.username,
         email: user.email,
-        fullName: `${firstName} ${lastName}`,
+        fullName: fullName,
         isNewUser: true
       }
     });

@@ -1,44 +1,23 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-interface Params {
-  params: {
-    id: string;
-  };
-}
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  console.log(`GET /api/certificate/${params.id} - start`);
+  const certificateId = params.id;
 
-// GET /api/certificate/[id] - Get a specific certificate
-export async function GET(request: Request, { params }: Params) {
   try {
-    const { id } = params;
-
+    // Fetch certificate with course info
     const certificate = await prisma.certificate.findUnique({
-      where: { id },
+      where: {
+        id: certificateId,
+      },
       include: {
-        participant: {
-          select: {
-            full_name: true,
-            company: true,
-            job_title: true,
-            user: {
-              select: {
-                email: true
-              }
-            }
-          },
-        },
-        instructure: {
-          select: {
-            full_name: true,
-            user: {
-              select: {
-                email: true
-              }
-            }
-          }
-        },
         course: {
           select: {
+            id: true,
             course_name: true,
           },
         },
@@ -46,68 +25,40 @@ export async function GET(request: Request, { params }: Params) {
     });
 
     if (!certificate) {
-      return NextResponse.json(
-        { error: "Certificate not found" },
-        { status: 404 }
-      );
+      console.log(`Certificate with ID ${certificateId} not found`);
+      return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
     }
 
-    // Check if certificate is expired and update status if needed
-    const today = new Date();
-    const expiryDate = new Date(certificate.expiryDate);
-    
-    // If certificate is expired but status is not set to "Expired"
-    if (expiryDate < today && certificate.status !== "Expired") {
-      console.log(`Certificate ${certificate.id} has expired. Updating status.`);
-      
-      // Update the status in the database
-      await prisma.certificate.update({
-        where: { id: certificate.id },
-        data: { status: "Expired" }
-      });
-      
-      // Update the status in the response
-      certificate.status = "Expired";
-    }
-
-    // Format the response
-    const formattedCertificate = {
+    // Format response
+    const response = {
       id: certificate.id,
-      name: certificate.name || certificate.participant?.full_name || "Unknown",
+      name: certificate.name,
       certificateNumber: certificate.certificateNumber,
-      issueDate: certificate.issueDate.toISOString().split('T')[0],
-      expiryDate: certificate.expiryDate.toISOString().split('T')[0],
+      issueDate: certificate.issueDate,
+      expiryDate: certificate.expiryDate,
       status: certificate.status,
-      pdfUrl: certificate.pdfUrl || null,
-      driveLink: certificate.driveLink || null,
-      email: certificate.participant?.user?.email || certificate.instructure?.user?.email || null,
-      participant: certificate.participant ? {
-        id: certificate.participantId,
-        name: certificate.participant.full_name,
-        company: certificate.participant.company,
-        jobTitle: certificate.participant.job_title,
-        email: certificate.participant.user?.email || null,
-      } : null,
-      course: certificate.course ? {
-        id: certificate.courseId,
-        name: certificate.course.course_name,
-      } : null,
-      createdAt: certificate.createdAt.toISOString(),
-      updatedAt: certificate.updatedAt.toISOString(),
+      pdfUrl: certificate.pdfUrl,
+      driveLink: certificate.driveLink,
+      course: certificate.course
+        ? {
+            id: certificate.course.id,
+            name: certificate.course.course_name,
+          }
+        : undefined,
     };
 
-    return NextResponse.json(formattedCertificate);
+    return NextResponse.json(response);
   } catch (error) {
-    console.error("Error fetching certificate:", error);
+    console.error(`Error fetching certificate ${certificateId}:`, error);
     return NextResponse.json(
-      { error: "Failed to fetch certificate" },
+      { error: "Failed to fetch certificate details" },
       { status: 500 }
     );
   }
 }
 
 // PUT /api/certificate/[id] - Update a certificate
-export async function PUT(request: Request, { params }: Params) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
     const body = await request.json();
@@ -186,7 +137,7 @@ export async function PUT(request: Request, { params }: Params) {
 }
 
 // DELETE /api/certificate/[id] - Delete a certificate
-export async function DELETE(request: Request, { params }: Params) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
 

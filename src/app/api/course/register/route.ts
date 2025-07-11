@@ -450,10 +450,37 @@ export async function POST(req: Request) {
       });
       
       if (existingRegistration) {
-        return NextResponse.json(
-          { error: "Anda sudah terdaftar di kelas ini. Silakan periksa halaman 'My Courses' untuk melihat status pembayaran dan mengunggah bukti pembayaran jika belum." },
-          { status: 400 }
-        );
+        // Blokir hanya jika sudah Registered dan Paid
+        if (
+          existingRegistration.reg_status === 'Registered' &&
+          existingRegistration.payment_status === 'Paid'
+        ) {
+          return NextResponse.json(
+            { error: "Anda sudah terdaftar di kelas ini. Silakan periksa halaman 'My Courses' untuk melihat status pembayaran dan mengunggah bukti pembayaran jika belum." },
+            { status: 400 }
+          );
+        } else {
+          // Jika masih WaitingPayment/Unpaid, kembalikan data existing agar frontend bisa lanjutkan pembayaran
+          return NextResponse.json({
+            success: true,
+            message: "Lanjutkan pembayaran",
+            data: {
+              registrationId: existingRegistration.id,
+              course: classData.course.course_name,
+              className: `${classData.location} - ${new Date(classData.start_date).toLocaleDateString()}`,
+              payment: classData.price,
+              paymentStatus: existingRegistration.payment_status,
+              referenceNumber: "",
+              courseScheduleId: classId,
+              userInfo: currentUser ? {
+                email: currentUser.email,
+                username: currentUser.username,
+                fullName: currentUser.participant?.[0]?.full_name || userName
+              } : null,
+              bankAccounts: await getBankAccounts()
+            }
+          });
+        }
       }
     }
     
@@ -472,7 +499,7 @@ export async function POST(req: Request) {
       data: {
         id: registrationId,
         reg_date: new Date(),
-        reg_status: "Pending",
+        reg_status: "WaitingPayment",
         payment: classData.price,
         payment_status: "Unpaid",
         payment_method: paymentMethod || "Transfer Bank",

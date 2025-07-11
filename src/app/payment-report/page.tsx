@@ -1254,13 +1254,6 @@ export default function PaymentReport() {
               </svg>
               Bank Accounts
             </button>
-            <Link
-              href="/payment/add"
-              className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-            >
-              <Plus size={14} />
-              Add
-            </Link>
           </div>
         </div>
 

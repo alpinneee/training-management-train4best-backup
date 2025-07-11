@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendCertificateEmail } from '@/lib/email';
 
 interface Params {
   params: {
@@ -23,6 +24,35 @@ async function generateUniqueCertificateNumber(): Promise<string> {
   }
   
   return randomNum;
+}
+
+// Helper function to get instructor email
+async function getInstructorEmail(instructureId: string): Promise<string | null> {
+  // First try to get email through the certificate's instructure relation
+  const certificate = await prisma.certificate.findFirst({
+    where: { instructureId },
+    include: {
+      instructure: {
+        include: {
+          user: {
+            select: { email: true }
+          }
+        }
+      }
+    }
+  });
+
+  if (certificate?.instructure?.user && certificate.instructure.user.length > 0) {
+    return certificate.instructure.user[0].email;
+  }
+
+  // If not found, try direct user lookup
+  const directUser = await prisma.user.findFirst({
+    where: { instructureId },
+    select: { email: true }
+  });
+
+  return directUser?.email || null;
 }
 
 // POST /api/course-schedule/[id]/instructure/certificate - Add a certificate for an instructor
@@ -86,8 +116,42 @@ export async function POST(request: Request, { params }: Params) {
           expiryDate: existingCertificate.expiryDate,
           pdfUrl: pdfUrl || existingCertificate.pdfUrl,
           driveLink: driveLink || existingCertificate.driveLink
+        },
+        include: {
+          instructure: {
+            include: {
+              user: {
+                select: { email: true }
+              }
+            }
+          },
+          course: true
         }
       });
+
+      // Get instructor email and send notification
+      const instructorEmail = await getInstructorEmail(instructureId);
+      if (instructorEmail) {
+        try {
+          const certificateLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/instructure/my-certificate`;
+          await sendCertificateEmail(
+            instructorEmail,
+            updatedCertificate.instructure?.full_name || 'Instructor',
+            updatedCertificate.name || `${updatedCertificate.course?.course_name || 'Course'} Certificate`,
+            updatedCertificate.course?.course_name || 'Unknown Course',
+            updatedCertificate.certificateNumber,
+            new Date(updatedCertificate.issueDate).toLocaleDateString('id-ID'),
+            updatedCertificate.expiryDate ? new Date(updatedCertificate.expiryDate).toLocaleDateString('id-ID') : 'No expiry',
+            certificateLink,
+            updatedCertificate.driveLink || updatedCertificate.pdfUrl
+          );
+          console.log('Certificate update email sent successfully to:', instructorEmail);
+        } catch (emailError) {
+          console.error('Error sending certificate update email:', emailError);
+        }
+      } else {
+        console.log('No email found for instructor:', instructureId);
+      }
 
       return NextResponse.json({
         id: updatedCertificate.id,
@@ -122,8 +186,42 @@ export async function POST(request: Request, { params }: Params) {
         },
         pdfUrl: pdfUrl || null,
         driveLink: driveLink || null
+      },
+      include: {
+        instructure: {
+          include: {
+            user: {
+              select: { email: true }
+            }
+          }
+        },
+        course: true
       }
     });
+
+    // Get instructor email and send notification
+    const instructorEmail = await getInstructorEmail(instructureId);
+    if (instructorEmail) {
+      try {
+        const certificateLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/instructure/my-certificate`;
+        await sendCertificateEmail(
+          instructorEmail,
+          certificate.instructure?.full_name || 'Instructor',
+          certificate.name || `${certificate.course?.course_name || 'Course'} Certificate`,
+          certificate.course?.course_name || 'Unknown Course',
+          certificate.certificateNumber,
+          new Date(certificate.issueDate).toLocaleDateString('id-ID'),
+          certificate.expiryDate ? new Date(certificate.expiryDate).toLocaleDateString('id-ID') : 'No expiry',
+          certificateLink,
+          certificate.driveLink || certificate.pdfUrl
+        );
+        console.log('Certificate creation email sent successfully to:', instructorEmail);
+      } catch (emailError) {
+        console.error('Error sending certificate creation email:', emailError);
+      }
+    } else {
+      console.log('No email found for instructor:', instructureId);
+    }
 
     return NextResponse.json({
       id: certificate.id,

@@ -15,8 +15,9 @@ const CourseCard = ({
   quota, 
   onRegister,
   isPendingRegistration = false,
-  registrationId = null,
-  isPaidRegistration = false
+  registrationId,
+  isPaidRegistration = false,
+  paymentStatus = 'Unpaid'
 }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -40,9 +41,19 @@ const CourseCard = ({
     if (isPaidRegistration) {
       // Navigate to course schedule detail page
       router.push(`/participant/my-course/${id}`);
+    } else if (
+      isPendingRegistration && registrationId && (paymentStatus === 'Pending' || paymentStatus === 'WaitingVerification')
+    ) {
+      // View Payment: go to payment page
+      router.push(`/participant/payment`);
+    } else if (isPendingRegistration && registrationId && paymentStatus === 'Unpaid') {
+      // Call onRegister with registrationId to open payment modal
+      if (onRegister) {
+        onRegister(id, title, className, registrationId);
+      }
     } else if (isPendingRegistration && registrationId) {
-      // Panggil fungsi onRegister dengan parameter tambahan untuk menunjukkan ini adalah lanjutan pembayaran
-      onRegister(id, title, className, registrationId);
+      // Default: go to payment page
+      router.push(`/participant/payment`);
     } else if (onRegister) {
       // Jika belum terdaftar, panggil fungsi pendaftaran biasa
       onRegister(id, title, className);
@@ -75,36 +86,35 @@ const CourseCard = ({
         
         <div className="space-y-1 mb-2.5 text-xs">
           <div className="flex justify-between">
-            <span className="text-gray-500">Jadwal:</span>
+            <span className="text-gray-500">Schedule:</span>
             <span className="text-gray-800 font-medium">{className}</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-gray-500">Mulai:</span>
+            <span className="text-gray-500">Start:</span>
             <span className="text-gray-800">{formatDate(startDate)}</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-gray-500">Selesai:</span>
+            <span className="text-gray-500">End:</span>
             <span className="text-gray-800">{formatDate(endDate)}</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-gray-500">Lokasi:</span>
+            <span className="text-gray-500">Location:</span>
             <span className="text-gray-800">{location} ({room})</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-gray-500">Kuota:</span>
-            <span className="text-gray-800">{quota} peserta</span>
+            <span className="text-gray-500">Quota:</span>
+            <span className="text-gray-800">{quota} participants</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-gray-500">Biaya:</span>
+            <span className="text-gray-500">Fee:</span>
             <span className="text-gray-800 font-semibold">{formatPrice(price)}</span>
           </div>
         </div>
-        
         <button
           onClick={handleButtonClick}
           disabled={loading}
@@ -112,17 +122,21 @@ const CourseCard = ({
             isPaidRegistration 
               ? 'bg-blue-500 hover:bg-blue-600' 
               : isPendingRegistration 
-                ? 'bg-yellow-500 hover:bg-yellow-600' 
+                ? paymentStatus === 'Pending' || paymentStatus === 'WaitingVerification'
+                  ? 'bg-yellow-600 hover:bg-yellow-700'
+                  : 'bg-yellow-500 hover:bg-yellow-600'
                 : 'bg-green-500 hover:bg-green-600'
           } text-white font-medium py-1.5 text-sm rounded transition-colors duration-300 disabled:bg-gray-400`}
         >
           {loading 
-            ? 'Memproses...' 
+            ? 'Processing...' 
             : isPaidRegistration 
-              ? 'Detail' 
+              ? 'Details' 
               : isPendingRegistration 
-                ? 'Lanjutkan Pembayaran' 
-                : 'Daftar'}
+                ? paymentStatus === 'Pending' || paymentStatus === 'WaitingVerification'
+                  ? 'View Payment'
+                  : 'Lanjutkan Pembayaran' 
+                : 'Register'}
         </button>
       </div>
     </div>

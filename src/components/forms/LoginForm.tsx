@@ -136,16 +136,7 @@ const LoginForm = () => {
   };
 
   // Display link to debug login
-  const DebugLoginLink = () => (
-    <div className="mt-4 text-center">
-      <Link href="/debug-login" className="text-xs text-gray-500 hover:underline mr-4">
-        Debug Login
-      </Link>
-      <Link href="/generate-secret" className="text-xs text-blue-500 hover:underline font-semibold">
-          Generate Secret
-        </Link>
-    </div>
-  );
+ 
 
   return (
     <motion.div
@@ -278,7 +269,7 @@ const LoginForm = () => {
                   className="intro-x mt-4 flex text-xs text-slate-600 dark:text-slate-500 sm:text-sm"
                 >
           
-                  <Link href="/forgot-password" className="text-[#373A8D]">
+                  <Link href="/reset-password" className="text-[#373A8D]">
                     Forgot Password?
                   </Link>
                 </motion.div>
@@ -304,7 +295,6 @@ const LoginForm = () => {
                 </motion.div>
               </form>
 
-              <DebugLoginLink />
             </div>
           </motion.div>
           {/* END: Login Form */}

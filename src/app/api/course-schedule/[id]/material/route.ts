@@ -15,55 +15,11 @@ interface CourseMaterial {
   updatedAt: Date;
 }
 
+// Mock materials data for development
+
+
 // Get materials for a course schedule
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    // Allow bypassing authentication during development
-    if (!session) {
-      console.warn("No session found, but allowing request as development mode");
-    }
-    
-    const courseId = params.id;
-    console.log(`Fetching materials for course ${courseId}`);
-    
-    // Return mock data since CourseMaterial table doesn't exist yet
-    const mockMaterials: CourseMaterial[] = [
-      {
-        id: "1",
-        title: "Introduction to Course",
-        description: "Basic introduction and overview",
-        fileUrl: "https://drive.google.com/file/d/example1",
-        day: 1,
-        courseScheduleId: courseId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: "2",
-        title: "Advanced Topics",
-        description: "Advanced concepts and techniques",
-        fileUrl: "https://drive.google.com/file/d/example2",
-        day: 2,
-        courseScheduleId: courseId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
-    
-    return NextResponse.json({ materials: mockMaterials });
-  } catch (error) {
-    console.error("Error fetching course materials:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch course materials" },
-      { status: 500 }
-    );
-  }
-}
+
 
 // Create a new material for a course schedule
 export async function POST(

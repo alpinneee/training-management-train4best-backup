@@ -5,47 +5,13 @@ import jwt from "jsonwebtoken"
 import type { NextRequest } from 'next/server'
 
 // Fungsi untuk logging
+console.log('=== MIDDLEWARE MASUK ===');
 function logDebug(message: string, data?: any) {
   console.log(`[MIDDLEWARE] ${message}`, data ? JSON.stringify(data, null, 2) : '');
 }
 
 // Daftar rute publik yang tidak memerlukan autentikasi
-const publicRoutes = [
-  "/", 
-  "/login", 
-  "/register", 
-  "/api/auth", 
-  "/api/auth/refresh",
-  "/api/auth/session-check",
-  "/api/profile",
-  "/profile",
-  "/api/direct-login",
-  "/api/debug-session",
-  "/api/debug-token",
-  "/api/logout",
-  "/api/admin-auth-bypass",
-  "/api/dashboard-access",
-  "/api/dashboard-verify",
-  "/api/direct-dashboard",
-  "/api/dashboard",
-  "/api/force-login",
-  "/debug-login",
-  "/debug-auth",
-  "/admin-login",
-  "/admin-dashboard",
-  "/participant-dashboard",
-  "/instructure-dashboard",
-  "/dashboard-access",
-  "/dashboard-direct",
-  "/dashboard-static",
-  "/dashboard-bypass",
-  "/dashboard-final",
-  "/dashboard-fix",
-  "/force-dashboard",
-  "/_next", 
-  "/favicon.ico", 
-  "/img"
-];
+
 
 // Rute yang hanya bisa diakses admin
 const adminRoutes = [
@@ -111,10 +77,7 @@ export default async function middleware(request: NextRequest) {
   logDebug(`Middleware dipanggil untuk path: ${path}`);
 
   // Izinkan akses ke rute publik tanpa autentikasi
-  if (publicRoutes.some(route => path.startsWith(route))) {
-    logDebug(`Path ${path} adalah rute publik, akses diizinkan`);
-    return response;
-  }
+
 
   try {
     // Cek apakah ini adalah percobaan login berulang untuk mencegah loop
@@ -228,21 +191,30 @@ export default async function middleware(request: NextRequest) {
     // Cek akses berdasarkan tipe pengguna
     if (userTypeLower === 'admin') {
       // Admin dapat mengakses semua rute admin
-      if (adminRoutes.some(route => path.startsWith(route))) {
+      if (adminRoutes.some(route => path === route || path.startsWith(route + '/'))) {
         logDebug(`Admin mengakses rute admin: ${path}, akses diizinkan`);
         return response;
+      } else {
+        logDebug(`Admin mencoba akses non-admin route: ${path}, redirect ke /dashboard`);
+        return NextResponse.redirect(new URL('/dashboard', request.url));
       }
     } else if (userTypeLower === 'instructure') {
       // Instructor hanya dapat mengakses rute instructor
-      if (instructorRoutes.some(route => path.startsWith(route))) {
+      if (instructorRoutes.some(route => path === route || path.startsWith(route + '/'))) {
         logDebug(`Instructor mengakses rute instructor: ${path}, akses diizinkan`);
         return response;
+      } else {
+        logDebug(`Instructor mencoba akses non-instructor route: ${path}, redirect ke /instructure-dashboard`);
+        return NextResponse.redirect(new URL('/instructure-dashboard', request.url));
       }
     } else if (userTypeLower === 'participant') {
       // Participant hanya dapat mengakses rute participant
-      if (participantRoutes.some(route => path.startsWith(route))) {
+      if (participantRoutes.some(route => path === route || path.startsWith(route + '/'))) {
         logDebug(`Participant mengakses rute participant: ${path}, akses diizinkan`);
         return response;
+      } else {
+        logDebug(`Participant mencoba akses non-participant route: ${path}, redirect ke /participant-dashboard`);
+        return NextResponse.redirect(new URL('/participant-dashboard', request.url));
       }
     }
 

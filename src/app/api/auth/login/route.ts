@@ -6,6 +6,8 @@ import { cookies } from "next/headers";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
+const secret = process.env.NEXTAUTH_SECRET || "ee242735312254106fe3e96a49c7439e224a303ff71c148eee211ee52b6df1719d261fbf28697c6375bfa1ff473b328d31659d6308da93ea03ae630421a8024e";
+
 export async function POST(request: Request) {
   try {
     // Parse request
@@ -57,18 +59,46 @@ export async function POST(request: Request) {
       where: { id: user.id },
       data: { last_login: new Date() }
     });
-    
-    // Return minimal information
-    return NextResponse.json({
+
+    // --- MULAI TAMBAHAN: Buat JWT dan set cookie NextAuth ---
+    // Buat payload JWT
+    const payload = {
+      id: user.id,
+      email: user.email,
+      name: user.username,
+      userType: userType
+    };
+    // Buat JWT pakai jose
+    const jwt = await new SignJWT(payload)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("7d")
+      .sign(new TextEncoder().encode(secret));
+
+    // Siapkan response
+    const response = NextResponse.json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.username,
-        userType: userType
-      },
+      user: payload,
       message: "Login successful"
     });
+    // Set cookie next-auth.session-token
+    response.cookies.set("next-auth.session-token", jwt, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7 // 7 hari
+    });
+    // Jika admin, set juga admin_token
+    if (userType.toLowerCase() === "admin") {
+      response.cookies.set("admin_token", jwt, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7
+      });
+    }
+    return response;
+    // --- END TAMBAHAN ---
   } catch (error) {
     console.error("API login error:", error);
     return NextResponse.json(

@@ -145,6 +145,7 @@ model User {
   participant   Participant[]
   instructure   Instructure?  @relation(fields: [instructureId], references: [id], map: "User_instructureId_fkey")
   userType      UserType      @relation(fields: [userTypeId], references: [id], map: "User_userTypeId_fkey")
+  passwordResetToken PasswordResetToken[]
 
   @@index([instructureId], map: "User_instructureId_fkey")
   @@index([userTypeId], map: "User_userTypeId_fkey")
@@ -268,4 +269,15 @@ model Attendance {
   
   @@index([registrationId])
   @@map("attendance")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_token")
 }

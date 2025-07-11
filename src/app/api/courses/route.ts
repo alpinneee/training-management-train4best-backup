@@ -1,24 +1,26 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-// GET /api/courses - Get all courses
+// GET /api/courses - Mendapatkan semua courses
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const search = searchParams.get('search') || ''
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const skip = (page - 1) * limit
-    
-    // Search in course name
-    const where = search ? {
-      course_name: { contains: search }
-    } : {}
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
+    const format = searchParams.get('format') || 'detailed'; // 'detailed' or 'simple'
 
-    // Get total count
-    const total = await prisma.course.count({ where })
+    // Filter berdasarkan nama course
+    const where: any = {};
+    if (search) {
+      where.course_name = { contains: search };
+    }
 
-    // Get courses with pagination
+    // Mendapatkan total jumlah data
+    const total = await prisma.course.count({ where });
+
+    // Mendapatkan data courses
     const courses = await prisma.course.findMany({
       where,
       skip,
@@ -29,22 +31,41 @@ export async function GET(request: Request) {
       include: {
         courseType: {
           select: {
-            id: true,
             course_type: true
           }
         }
       }
-    })
-    
-    // Format response
-    const formattedCourses = courses.map((course) => ({
+    });
+
+    // Format respons berdasarkan parameter format
+    if (format === 'simple') {
+      // Format sederhana untuk dropdown
+      const simpleCourses = courses.map((course) => ({
+        id: course.id,
+        course_name: course.course_name,
+        course_type: course.courseType?.course_type || 'Unknown',
+      }));
+
+      return NextResponse.json({
+        courses: simpleCourses,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    }
+
+    // Format detail untuk tabel
+    const formattedCourses = courses.map((course, index) => ({
+      no: skip + index + 1,
       id: course.id,
-      course_name: course.course_name,
-      description: course.description,
-      image: course.image,
-      courseTypeId: course.courseTypeId,
-      courseType: course.courseType.course_type
-    }))
+      courseName: course.course_name,
+      courseType: course.courseType?.course_type || 'Unknown',
+      description: course.description || '',
+      image: course.image || null,
+    }));
 
     return NextResponse.json({
       data: formattedCourses,
@@ -54,48 +75,36 @@ export async function GET(request: Request) {
         limit,
         totalPages: Math.ceil(total / limit),
       },
-    })
+    });
   } catch (error) {
-    console.error('Error fetching courses:', error)
+    console.error('Error fetching courses:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch courses', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to fetch courses' },
       { status: 500 }
-    )
+    );
   }
 }
 
-// POST /api/courses - Create a new course
+// POST /api/courses - Membuat course baru
 export async function POST(request: Request) {
   try {
-    const { course_name, courseTypeId, description } = await request.json()
+    const { courseName, courseTypeId, description, image } = await request.json();
 
-    // Validate required fields
-    if (!course_name || !courseTypeId) {
+    if (!courseName || !courseTypeId) {
       return NextResponse.json(
         { error: 'Course name and course type are required' },
         { status: 400 }
-      )
+      );
     }
 
-    // Check if course type exists
-    const courseTypeExists = await prisma.courseType.findUnique({
-      where: { id: courseTypeId }
-    })
-
-    if (!courseTypeExists) {
-      return NextResponse.json(
-        { error: 'Course type not found' },
-        { status: 404 }
-      )
-    }
-
-    // Create new course
+    // Membuat course baru
     const newCourse = await prisma.course.create({
       data: {
-        id: `course_${Date.now()}`,
-        course_name,
-        courseTypeId,
-        description: description || null
+        id: Date.now().toString(), // Generate ID sederhana
+        course_name: courseName,
+        courseTypeId: courseTypeId,
+        description: description || '',
+        image: image || null,
       },
       include: {
         courseType: {
@@ -104,26 +113,26 @@ export async function POST(request: Request) {
           }
         }
       }
-    })
+    });
 
     return NextResponse.json({
       id: newCourse.id,
-      course_name: newCourse.course_name,
+      courseName: newCourse.course_name,
+      courseType: newCourse.courseType?.course_type,
       description: newCourse.description,
-      courseTypeId: newCourse.courseTypeId,
-      courseType: newCourse.courseType.course_type
-    }, { status: 201 })
+      image: newCourse.image,
+    }, { status: 201 });
   } catch (error) {
-    console.error('Error creating course:', error)
+    console.error('Error creating course:', error);
     if (error instanceof Error) {
       return NextResponse.json(
         { error: `Failed to create course: ${error.message}` },
         { status: 500 }
-      )
+      );
     }
     return NextResponse.json(
       { error: 'Failed to create course' },
       { status: 500 }
-    )
+    );
   }
 } 

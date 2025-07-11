@@ -58,13 +58,22 @@ export function getNextAuthSecret(): string {
   
   // For development, generate a consistent secret based on a fallback
   if (process.env.NODE_ENV !== 'production') {
+    // Use a hardcoded secret for development only
+    console.warn("Using hardcoded secret for development. DO NOT USE IN PRODUCTION.");
     return "ee242735312254106fe3e96a49c7439e224a303ff71c148eee211ee52b6df1719d261fbf28697c6375bfa1ff473b328d31659d6308da93ea03ae630421a8024e";
   }
   
   // For production without a set secret, generate a secure one
-  // Note: This will cause all existing sessions to be invalidated on server restart
-  console.warn("ee242735312254106fe3e96a49c7439e224a303ff71c148eee211ee52b6df1719d261fbf28697c6375bfa1ff473b328d31659d6308da93ea03ae630421a8024e");
+  console.warn("NEXTAUTH_SECRET not set in environment. Generating a new one.");
   return generateSecureSecret();
+}
+
+// Make sure the secret is accessible to the client
+if (typeof window !== 'undefined') {
+  // Only in browser
+  if (!process.env.NEXTAUTH_SECRET) {
+    process.env.NEXTAUTH_SECRET = getNextAuthSecret();
+  }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -138,4 +147,35 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+  // Debug mode - enable for development
+  debug: process.env.NODE_ENV !== 'production',
+  // Make sure cookies work properly for your environment
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Allow non-HTTPS for local development
+      }
+    },
+    callbackUrl: {
+      name: 'next-auth.callback-url',
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: false,
+      }
+    },
+    csrfToken: {
+      name: 'next-auth.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false,
+      }
+    }
+  }
 }; 

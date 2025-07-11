@@ -3,6 +3,25 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+// Fungsi helper untuk menghitung jumlah kehadiran
+async function updatePresentDayCount(registrationId: string) {
+  // Hitung jumlah kehadiran dengan status "present"
+  const presentCount = await prisma.attendance.count({
+    where: { 
+      registrationId: registrationId,
+      status: "present" 
+    }
+  });
+  
+  // Update nilai present_day di courseRegistration
+  await prisma.courseRegistration.update({
+    where: { id: registrationId },
+    data: { present_day: presentCount }
+  });
+  
+  return presentCount;
+}
+
 // POST /api/course-schedule/[id]/participant/attendance
 export async function POST(request, { params }) {
   try {
@@ -35,6 +54,10 @@ export async function POST(request, { params }) {
         date: date ? new Date(date) : undefined,
       }
     });
+    
+    // Update present_day count
+    const presentCount = await updatePresentDayCount(registration.id);
+    
     return NextResponse.json({
       id: attendance.id,
       registrationId: attendance.registrationId,
@@ -42,6 +65,7 @@ export async function POST(request, { params }) {
       mode: attendance.mode,
       date: attendance.date,
       createdBy: attendance.createdBy,
+      presentCount: presentCount
     }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Failed to create attendance" }, { status: 500 });
@@ -83,6 +107,16 @@ export async function PATCH(request, { params }) {
     if (!attendanceId) {
       return NextResponse.json({ error: "attendanceId is required" }, { status: 400 });
     }
+    
+    // Dapatkan attendance untuk mendapatkan registrationId
+    const attendance = await prisma.attendance.findUnique({
+      where: { id: attendanceId }
+    });
+    
+    if (!attendance) {
+      return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
+    }
+    
     // Update attendance
     const updated = await prisma.attendance.update({
       where: { id: attendanceId },
@@ -92,7 +126,14 @@ export async function PATCH(request, { params }) {
         date: date ? new Date(date) : undefined,
       },
     });
-    return NextResponse.json({ attendance: updated }, { status: 200 });
+    
+    // Update present_day count
+    const presentCount = await updatePresentDayCount(attendance.registrationId);
+    
+    return NextResponse.json({ 
+      attendance: updated,
+      presentCount: presentCount
+    }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Failed to update attendance" }, { status: 500 });
   }
@@ -107,8 +148,28 @@ export async function DELETE(request, { params }) {
     if (!attendanceId) {
       return NextResponse.json({ error: "attendanceId is required" }, { status: 400 });
     }
+    
+    // Dapatkan attendance untuk mendapatkan registrationId sebelum dihapus
+    const attendance = await prisma.attendance.findUnique({
+      where: { id: attendanceId }
+    });
+    
+    if (!attendance) {
+      return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
+    }
+    
+    const registrationId = attendance.registrationId;
+    
+    // Delete attendance
     await prisma.attendance.delete({ where: { id: attendanceId } });
-    return NextResponse.json({ success: true }, { status: 200 });
+    
+    // Update present_day count
+    const presentCount = await updatePresentDayCount(registrationId);
+    
+    return NextResponse.json({ 
+      success: true,
+      presentCount: presentCount
+    }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Failed to delete attendance" }, { status: 500 });
   }

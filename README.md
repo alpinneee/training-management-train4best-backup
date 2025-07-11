@@ -1,40 +1,43 @@
-# Sistem Manajemen Pelatihan Train4Best
+# Train4Best - Course Registration System
 
-Sistem manajemen pelatihan komprehensif yang dibangun dengan Next.js, Prisma, dan NextAuth.js.
+A comprehensive course registration and management system built with Next.js, TypeScript, and Prisma ORM.
 
-## Fitur
+## Features
 
-### Autentikasi & Manajemen Pengguna
-- Kontrol akses berbasis peran (Super Admin, Instruktur, Peserta)
-- Autentikasi aman menggunakan NextAuth.js
-- Registrasi pengguna dengan email dan password
-- Manajemen profil dengan dashboard khusus setiap peran
+- User authentication with role-based access control (Admin, Instructor, Participant)
+- Course management and scheduling
+- Participant registration and enrollment tracking
+- Instructor management and assignment
+- Certificate generation and validation
+- Payment processing and verification
+- Interactive dashboards with analytics
+- Responsive design for all devices
 
-### Administrasi Pengguna (Super Admin)
-- Operasi CRUD pengguna lengkap
-- Manajemen dan penugasan peran
-- Penanganan password aman dengan bcrypt
-- Daftar pengguna dengan filter berdasarkan peran
+## Tech Stack
 
-### Manajemen Kursus
-- Pembuatan dan penjadwalan kursus
-- Manajemen pendaftaran
-- Pelacakan kemajuan
-- Manajemen sertifikat
+- **Frontend**: Next.js, React 18, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Database**: MySQL
+- **Authentication**: NextAuth.js, JWT
+- **UI Components**: Material UI, Radix UI, shadcn/ui
+- **Charts & Visualization**: Recharts
+- **Email**: Nodemailer, Resend
+- **Testing**: Jest, React Testing Library
 
-## Teknologi yang Digunakan
-- Next.js 13+ (App Router)
-- Prisma (MySQL)
-- NextAuth.js
-- TypeScript
-- Tailwind CSS
-- Framer Motion
+## Getting Started
 
-## Memulai
+### Prerequisites
 
-1. Clone repository:
+- Node.js 18+ 
+- npm or yarn
+- MySQL database
+
+### Installation
+
+1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/train4best--1-management-training.git
+git clone <repository-url>
+cd traun4bst-new
 ```
 
 2. Install dependencies:
@@ -42,307 +45,176 @@ git clone https://github.com/yourusername/train4best--1-management-training.git
 npm install
 ```
 
-3. Siapkan variabel lingkungan:
+3. Set up environment variables:
 ```bash
-cp .env.example .env
-```
-Isi konfigurasi database dan NextAuth Anda.
-
-4. Jalankan migrasi database:
-```bash
-npx prisma migrate dev
+cp .env.example .env.local
 ```
 
-5. Jalankan server development:
-```bash
-npm run dev
+4. Configure your database connection in `.env.local`:
 ```
-
-## Peran Pengguna Default
-
-- **Super Admin**: Akses penuh ke sistem
-- **Instruktur**: Manajemen kursus dan pelacakan siswa
-- **Peserta**: Pendaftaran kursus dan pelacakan kemajuan
-
-## Kontribusi
-
-1. Fork repository
-2. Buat branch fitur Anda
-3. Commit perubahan Anda
-4. Push ke branch
-5. Buat Pull Request
-
-## 🚀 Fitur Utama
-
-- **Autentikasi Multi-peran**
-  - Super Admin
-  - Instruktur
-  - Peserta
-  - Manajemen akses berbasis peran
-
-- **Manajemen Kursus**
-  - Pembuatan dan pengelolaan kursus
-  - Penjadwalan kelas
-  - Manajemen materi pembelajaran
-  - Kategorisasi kursus
-
-- **Manajemen Peserta**
-  - Pendaftaran peserta
-  - Tracking progress pembelajaran
-  - Manajemen sertifikasi
-  - Riwayat pelatihan
-
-- **Sistem Sertifikasi**
-  - Pembuatan sertifikat
-  - Tracking masa berlaku
-  - Notifikasi sertifikat yang akan kadaluarsa
-  - Verifikasi sertifikat
-
-- **Laporan dan Analitik**
-  - Laporan keuangan
-  - Statistik peserta
-  - Analisis performa kursus
-  - Dashboard interaktif
-
-## 🛠️ Teknologi yang Digunakan
-
-- **Frontend**
-  - Next.js 14 (App Router)
-  - TypeScript
-  - Tailwind CSS
-  - Material-UI
-  - React Query
-
-- **Backend**
-  - Next.js API Routes
-  - Prisma ORM
-  - MySQL Database
-  - NextAuth.js
-
-## 📋 Prasyarat
-
-Sebelum menginstal, pastikan perangkat Anda memenuhi persyaratan berikut:
-
-- Node.js (versi 18.0.0 atau lebih baru)
-- MySQL (versi 8.0 atau lebih baru)
-- npm atau yarn
-- Git
-
-## 🚀 Panduan Instalasi
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/username/train4best.git
-cd train4best
-```
-
-### 2. Instalasi Dependencies
-
-```bash
-npm install
-# atau
-yarn install
-```
-
-### 3. Konfigurasi Environment
-
-Buat file `.env` di root proyek dan isi dengan konfigurasi berikut:
-
-```env
-# Database
-DATABASE_URL="mysql://user:password@localhost:3306/train4best"
-
-# NextAuth
+DATABASE_URL="mysql://username:password@localhost:3306/train4best"
 NEXTAUTH_SECRET="your-secret-key"
 NEXTAUTH_URL="http://localhost:3000"
-
-# Email (opsional)
-EMAIL_SERVER_HOST="smtp.example.com"
-EMAIL_SERVER_PORT=587
-EMAIL_SERVER_USER="your-email"
-EMAIL_SERVER_PASSWORD="your-password"
-EMAIL_FROM="noreply@example.com"
 ```
 
-## 📚 Panduan Instalasi dan Konfigurasi Database
-
-### 1. Instalasi MySQL
-
-#### Windows
-- Unduh MySQL Installer dari [situs resmi MySQL](https://dev.mysql.com/downloads/installer/)
-- Pilih "Developer Default" saat instalasi
-- Ikuti petunjuk instalasi dan atur password untuk pengguna root
-- Pastikan layanan MySQL berjalan
-
-#### macOS
+5. Run database migrations:
 ```bash
-brew install mysql
-brew services start mysql
-```
-
-#### Linux (Ubuntu/Debian)
-```bash
-sudo apt update
-sudo apt install mysql-server
-sudo systemctl start mysql
-sudo mysql_secure_installation
-```
-
-### 2. Buat Database
-
-Buka terminal MySQL:
-
-```bash
-# Windows
-mysql -u root -p
-
-# macOS/Linux
-sudo mysql -u root -p
-```
-
-Buat database dan pengguna:
-
-```sql
-CREATE DATABASE train4best;
-CREATE USER 'train4best_user'@'localhost' IDENTIFIED BY 'password_anda';
-GRANT ALL PRIVILEGES ON train4best.* TO 'train4best_user'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
-```
-
-### 3. Konfigurasi Database di Project
-
-Ubah string koneksi di file `.env`:
-
-```
-DATABASE_URL="mysql://train4best_user:password_anda@localhost:3306/train4best"
-```
-
-Ganti `password_anda` dengan password yang Anda buat sebelumnya.
-
-### 4. Setup Database dengan Prisma
-
-```bash
-# Generate Prisma Client
-npx prisma generate
-
-# Jalankan migrasi database (buat skema tabel)
-npx prisma migrate dev --name init
-```
-
-### 5. Mengelola Database dengan Prisma Studio
-
-Untuk UI visual database:
-
-```bash
-npx prisma studio
-```
-
-Akses di browser: http://localhost:5555
-
-### 4. Setup Database
-
-```bash
-# Generate Prisma Client
-npx prisma generate
-
-# Jalankan migrasi database
 npx prisma migrate dev
+```
 
-# (Opsional) Seed database dengan data awal
+6. Seed the database:
+```bash
 npx prisma db seed
 ```
 
-### 5. Jalankan Aplikasi
-
+7. Start the development server:
 ```bash
-# Development
 npm run dev
-# atau
-yarn dev
-
-# Production
-npm run build
-npm start
-# atau
-yarn build
-yarn start
 ```
 
-Aplikasi akan berjalan di `http://localhost:3000`
+## Project Structure
 
-## 📱 Akses Aplikasi
+```
+src/
+├── app/                 # Next.js app directory
+│   ├── api/             # API routes
+│   ├── (auth)/          # Authentication pages
+│   ├── dashboard/       # Admin dashboard
+│   ├── participant/     # Participant pages
+│   ├── instructure/     # Instructor pages
+│   └── ...              # Other pages
+├── components/          # React components
+│   ├── common/          # Shared components
+│   ├── forms/           # Form components
+│   ├── ui/              # UI components
+│   └── ...              # Other component categories
+├── lib/                 # Utilities and configurations
+│   ├── constants/       # Configuration constants
+│   ├── utils/           # Helper functions
+│   └── types/           # TypeScript type definitions
+├── contexts/            # React contexts
+└── providers/           # Auth providers
+```
 
-- **Super Admin**: `/dashboard`
-- **Instruktur**: `/instructor`
-- **Peserta**: `/participant`
+## Core Features
 
-## 🔧 Troubleshooting
+### Authentication & Authorization
+- Multi-role user system (Admin, Instructor, Participant)
+- Secure login with NextAuth and JWT
+- Role-based access control
+- Password reset functionality
 
-### Masalah Umum
+### Course Management
+- Course creation and scheduling
+- Course type categorization
+- Class management with location, room, and quota settings
+- Course material management
 
-1. **Error Database Connection**
-   - Pastikan MySQL server berjalan
-   - Periksa kredensial database di `.env`
-   - Pastikan database sudah dibuat
+### Participant System
+- Registration and enrollment tracking
+- Payment verification
+- Certificate issuance
+- Performance evaluation
 
-2. **Error Prisma**
-   ```bash
-   npx prisma generate
-   npx prisma migrate reset
-   ```
+### Instructor System
+- Instructor profile management
+- Class assignment
+- Student evaluation
+- Certificate management
 
-3. **Error Next.js**
-   ```bash
-   rm -rf .next
-   npm run dev
-   ```
+### Certificate System
+- Automatic certificate generation
+- Certificate validation
+- Expiry tracking
+- PDF generation
 
-### Troubleshooting Database
+### Payment System
+- Multiple payment method support
+- Payment verification
+- Receipt generation
+- Bank account management
 
-1. **Periksa Apakah MySQL Berjalan**:
-   ```bash
-   # Windows
-   net start mysql
+## API Endpoints
 
-   # macOS
-   brew services list
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/reset-password` - Password reset
+- `POST /api/auth/logout` - User logout
 
-   # Linux
-   sudo systemctl status mysql
-   ```
+### Courses
+- `GET /api/courses` - Get all courses
+- `POST /api/courses` - Create new course
+- `GET /api/courses/[id]` - Get course by ID
+- `PUT /api/courses/[id]` - Update course
+- `DELETE /api/courses/[id]` - Delete course
 
-2. **Reset Prisma Jika Perlu**:
-   ```bash
-   # Hapus dan regenerate Prisma client
-   rm -rf node_modules/.prisma
-   npx prisma generate
+### Participants
+- `GET /api/participant` - Get all participants
+- `POST /api/participant` - Create participant
+- `GET /api/participant/[id]` - Get participant by ID
+- `GET /api/participant/dashboard` - Get participant dashboard data
 
-   # Atau reset database
-   npx prisma migrate reset
-   ```
+### Instructors
+- `GET /api/instructure` - Get all instructors
+- `POST /api/instructure` - Create instructor
+- `GET /api/instructure/[id]` - Get instructor by ID
+- `GET /api/instructure/my-courses` - Get instructor's courses
 
-3. **Periksa Port MySQL** (default 3306)
+### Certificates
+- `GET /api/certificate` - Get all certificates
+- `POST /api/certificate` - Create certificate
+- `GET /api/certificate/[id]` - Get certificate by ID
+- `GET /api/certificate-expired` - Get expired certificates
 
-4. **Akses Database Langsung untuk Pemeriksaan**:
-   ```bash
-   mysql -u train4best_user -p
-   # Kemudian ketik:
-   USE train4best;
-   SHOW TABLES;
-   ```
+## Database Models
 
-## 🤝 Kontribusi
+The project uses Prisma ORM with the following main models:
+- User
+- UserType
+- Course
+- CourseType
+- Class
+- Participant
+- Instructure
+- Certificate
+- Payment
+- BankAccount
+- CourseMaterial
+- Attendance
+- ValueReport
 
-Kami menerima kontribusi! Silakan buat pull request atau buka issue untuk diskusi.
+## Testing
 
-## 📄 Lisensi
+Run tests with:
 
-Proyek ini dilisensikan di bawah [MIT License](LICENSE)
+```bash
+# Run all tests
+npm test
 
-## 📞 Kontak
+# Run tests in watch mode
+npm run test:watch
 
-Untuk bantuan dan dukungan, silakan hubungi:
-- Email: support@train4best.com
-- Website: https://train4best.com
+# Run tests with coverage report
+npm run test:coverage
+```
+
+## Deployment
+
+For production deployment:
+
+```bash
+# Build the application
+npm run build
+
+# Start the production server
+npm start
+```
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For support and questions, please contact the development team.

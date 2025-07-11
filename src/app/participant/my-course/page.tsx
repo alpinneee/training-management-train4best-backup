@@ -85,7 +85,7 @@ export default function MyCoursePage() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
-  const [pendingRegistrations, setPendingRegistrations] = useState<{[key: string]: string}>({});
+  const [pendingRegistrations, setPendingRegistrations] = useState<{[key: string]: {registrationId: string, paymentStatus: string}}>({});
   const [paidRegistrations, setPaidRegistrations] = useState<{[key: string]: boolean}>({});
   const [pendingRegistrationId, setPendingRegistrationId] = useState<string | null>(null);
   const [bankAccounts, setBankAccounts] = useState<{bankName: string; accountNumber: string; accountName: string}[]>([]);
@@ -335,7 +335,7 @@ export default function MyCoursePage() {
     });
   }, [fetchAvailableCourses, refreshKey]);
   
-  // Update the fetchPendingRegistrations function to also track paid registrations
+  // Update the fetchPendingRegistrations function to also track paid registrations and payment status
   const fetchPendingRegistrations = async (email: string) => {
     try {
       const response = await fetch(`/api/participant/pending-registrations?email=${encodeURIComponent(email)}`);
@@ -344,13 +344,16 @@ export default function MyCoursePage() {
         const data = await response.json();
         
         if (data.registrations && Array.isArray(data.registrations)) {
-          // Buat objek dengan courseId sebagai key dan registrationId sebagai value
-          const pendingRegs: {[key: string]: string} = {};
+          // Buat objek dengan courseId sebagai key dan value berisi registrationId dan paymentStatus
+          const pendingRegs: {[key: string]: {registrationId: string, paymentStatus: string}} = {};
           const paidRegs: {[key: string]: boolean} = {};
           
           data.registrations.forEach((reg: any) => {
             if (reg.courseId && reg.registrationId) {
-              pendingRegs[reg.courseId] = reg.registrationId;
+              pendingRegs[reg.courseId] = {
+                registrationId: reg.registrationId,
+                paymentStatus: reg.paymentStatus || 'Unpaid'
+              };
               // Check if registration is paid
               if (reg.paymentStatus === 'Paid') {
                 paidRegs[reg.courseId] = true;
@@ -358,8 +361,6 @@ export default function MyCoursePage() {
             }
           });
           
-          console.log('Pending registrations:', pendingRegs);
-          console.log('Paid registrations:', paidRegs);
           setPendingRegistrations(pendingRegs);
           setPaidRegistrations(paidRegs);
         }
@@ -380,21 +381,88 @@ export default function MyCoursePage() {
       className: courseClass
     });
     
-    // Jika ada registrationId, berarti ini adalah lanjutan pembayaran
-    if (registrationId) {
-      setPendingRegistrationId(registrationId);
-      setPaymentStep(2); // Langsung ke step pembayaran
-      
-      // Ambil detail pembayaran
-      fetchPaymentDetails(registrationId);
-    } else {
-      // Reset jika ini adalah pendaftaran baru
-      setPendingRegistrationId(null);
-      setPaymentStep(1);
-    }
-    
+    // Skip registration step and go directly to payment confirmation
     setIsRegisterModalOpen(true);
     setRegistrationError('');
+    
+    // Register immediately when modal is opened
+    handleDirectRegistration(courseId, courseTitle, courseClass);
+  };
+  
+  // New function to handle direct registration
+  const handleDirectRegistration = async (courseId: string, courseTitle: string, courseClass: string) => {
+    if (!termsAccepted) {
+      // Auto-accept terms
+      setTermsAccepted(true);
+    }
+    
+    setRegistering(true);
+    setRegistrationError('');
+    
+    try {
+      // Use the logged in user's email
+      const emailToUse = userEmail;
+      
+      // Validate the email to use
+      if (!emailToUse || !isValidEmail(emailToUse)) {
+        setRegistrationError('Invalid email. Please enter a valid email to register.');
+        setRegistering(false);
+        return;
+      }
+      
+      const registrationData = {
+        classId: courseId,
+        email: emailToUse,
+        paymentMethod: 'Transfer Bank'
+      };
+      
+      // Register the participant
+      const response = await fetch('/api/course/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registrationData),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setRegistrationResult(data.data);
+        setPaymentStep(2);
+        
+        // Save successful email for future use
+        if (data.data?.userInfo?.email) {
+          localStorage.setItem('userEmail', data.data.userInfo.email);
+        } else if (emailToUse) {
+          localStorage.setItem('userEmail', emailToUse);
+        }
+      } else {
+        // More descriptive error messages in English
+        if (data.error?.includes("not found")) {
+          setRegistrationError('User information was not found. Please login again and ensure your email is correct.');
+        } else if (data.error?.includes("profile is incomplete")) {
+          setRegistrationError(
+            <>
+              Your profile is incomplete. Please complete your profile before registering for a course.
+            </>
+          );
+        } else if (data.error?.includes("sudah terdaftar") || data.error?.includes("already registered")) {
+          setRegistrationError(
+            <>
+              You are already registered for this class. Please check your <a href="/participant/courses" className="text-blue-600 underline">My Courses</a> page for payment status and course details.
+            </>
+          );
+        } else if (data.error?.includes("Class is full") || data.error?.includes("kelas sudah penuh")) {
+          setRegistrationError('Sorry, this class is already full.');
+        } else {
+          setRegistrationError(data.error || 'Failed to register for the course.');
+        }
+      }
+    } catch (error) {
+      console.error('Error registering course:', error);
+      setRegistrationError('Failed to register for the course. Please try again.');
+    } finally {
+      setRegistering(false);
+    }
   };
   
   // Fungsi untuk mengambil detail pembayaran berdasarkan ID registrasi
@@ -772,7 +840,7 @@ export default function MyCoursePage() {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {courses.map((course) => {
-          console.log('Course image:', course.course.image); // Debug to see the image path
+          const pendingReg = pendingRegistrations[course.id];
           return (
             <CourseCard
               key={course.id}
@@ -791,12 +859,13 @@ export default function MyCoursePage() {
               room={course.room}
               quota={course.quota}
               onRegister={handleRegisterClick}
-              isPendingRegistration={!!pendingRegistrations[course.id]}
-              isPaidRegistration={!!paidRegistrations[course.id]}
-              registrationId={pendingRegistrations[course.id] as any}
+              isPendingRegistration={!!pendingReg}
+              isPaidRegistration={pendingReg?.paymentStatus === 'Paid'}
+              registrationId={pendingReg?.registrationId}
+              paymentStatus={pendingReg?.paymentStatus || 'Unpaid'}
             />
           );
-        })}
+        })} 
       </div>
     );
   };
@@ -812,11 +881,8 @@ export default function MyCoursePage() {
         {isRegisterModalOpen && (
           <Modal onClose={closeModal}>
             <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              {pendingRegistrationId ? 'Payment Confirmation' : 
-               paymentStep === 1 ? 'Course Registration' : 'Payment Confirmation'}
+              Payment Confirmation
             </h2>
-            
-            {/* Info message about registration process */}
             
             {registrationError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md mb-3 text-sm">
@@ -830,50 +896,12 @@ export default function MyCoursePage() {
               </div>
             )}
             
-            {paymentStep === 1 && !pendingRegistrationId && (
-              <div>
-                {selectedCourse && (
-                  <div className="mb-3 p-3 bg-gray-50 rounded-md">
-                    <h3 className="font-medium text-gray-800 mb-1 text-sm">{selectedCourse.title}</h3>
-                    <p className="text-gray-600 text-xs">{selectedCourse.className}</p>
-                  </div>
-                )}
-                
-                <div className="space-y-3">
-                  <div className="flex items-start">
-                    <input
-                      type="checkbox"
-                      id="terms"
-                      checked={termsAccepted}
-                      onChange={(e) => setTermsAccepted(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded mt-0.5"
-                    />
-                    <label htmlFor="terms" className="ml-2 block text-xs text-gray-700">
-                      I agree to the course terms and understand that payment is required to confirm registration.
-                      My registration will only be processed after the admin verifies my payment.
-                    </label>
-                  </div>
-                  
-                  <div className="flex gap-2 justify-end mt-3">
-                    <button
-                      onClick={closeModal}
-                      className="px-3 py-1.5 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 text-sm"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleRegisterSubmit}
-                      disabled={registering || (!isLoggedIn && (!manualEmail || !!emailError))}
-                      className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-sm"
-                    >
-                      {registering ? 'Processing...' : 'Register'}
-                    </button>
-                  </div>
-                </div>
+            {registering ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-gray-600">Processing registration...</span>
               </div>
-            )}
-
-            {(paymentStep === 2 || pendingRegistrationId) && registrationResult && (
+            ) : registrationResult ? (
               <div className="space-y-3">
                 {uploadSuccess ? (
                   <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-md text-sm">
@@ -1023,6 +1051,11 @@ export default function MyCoursePage() {
                     </div>
                   </>
                 )}
+              </div>
+            ) : (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-gray-600">Preparing payment information...</span>
               </div>
             )}
           </Modal>

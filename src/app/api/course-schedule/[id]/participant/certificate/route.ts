@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendParticipantCertificateEmail } from '@/lib/email';
 
 interface Params {
   params: {
@@ -90,8 +91,35 @@ export async function POST(request: Request, { params }: Params) {
           expiryDate: existingCertificate.expiryDate,
           pdfUrl: pdfUrl || existingCertificate.pdfUrl,
           driveLink: driveLink || existingCertificate.driveLink
+        },
+        include: {
+          participant: {
+            include: {
+              user: true
+            }
+          },
+          course: true
         }
       });
+
+      // Send email for updated certificate if participant has email
+      if (updatedCertificate.participant?.user?.email) {
+        try {
+          const certificateLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/participant/my-certificate`;
+          await sendParticipantCertificateEmail(
+            updatedCertificate.participant.user.email,
+            updatedCertificate.participant.full_name,
+            updatedCertificate.course.course_name,
+            updatedCertificate.certificateNumber,
+            new Date(updatedCertificate.issueDate).toLocaleDateString('id-ID'),
+            certificateLink,
+            updatedCertificate.driveLink || updatedCertificate.pdfUrl
+          );
+          console.log('Certificate email sent successfully to:', updatedCertificate.participant.user.email);
+        } catch (emailError) {
+          console.error('Error sending certificate email:', emailError);
+        }
+      }
 
       return NextResponse.json({
         id: updatedCertificate.id,
@@ -126,8 +154,35 @@ export async function POST(request: Request, { params }: Params) {
         },
         pdfUrl: pdfUrl || null,
         driveLink: driveLink || null
+      },
+      include: {
+        participant: {
+          include: {
+            user: true
+          }
+        },
+        course: true
       }
     });
+
+    // Send email for new certificate if participant has email
+    if (certificate.participant?.user?.email) {
+      try {
+        const certificateLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/participant/my-certificate`;
+        await sendParticipantCertificateEmail(
+          certificate.participant.user.email,
+          certificate.participant.full_name,
+          certificate.course.course_name,
+          certificate.certificateNumber,
+          new Date(certificate.issueDate).toLocaleDateString('id-ID'),
+          certificateLink,
+          certificate.driveLink || certificate.pdfUrl
+        );
+        console.log('Certificate email sent successfully to:', certificate.participant.user.email);
+      } catch (emailError) {
+        console.error('Error sending certificate email:', emailError);
+      }
+    }
 
     return NextResponse.json({
       id: certificate.id,

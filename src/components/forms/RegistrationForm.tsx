@@ -9,8 +9,7 @@ import { toast } from "react-hot-toast";
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     password: "",
     passwordConfirmation: "",
@@ -18,7 +17,7 @@ const RegistrationForm = () => {
   });
 
   const [isVisible, setIsVisible] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -35,22 +34,40 @@ const RegistrationForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    setErrors([]);
+    // setLoading(true); // Remove loading for validation
 
-    // Validasi password
+    // Kumpulkan semua error
+    const newErrors: string[] = [];
+    if (!formData.fullName.trim()) {
+      newErrors.push("Nama lengkap harus diisi");
+    }
+    if (!formData.email.trim()) {
+      newErrors.push("Email harus diisi");
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.push("Format email tidak valid");
+      }
+    }
+    if (!formData.password) {
+      newErrors.push("Password harus diisi");
+    } else if (formData.password.length < 6) {
+      newErrors.push("Password minimal 6 karakter");
+    }
     if (formData.password !== formData.passwordConfirmation) {
-      setError("Password tidak cocok");
-      setLoading(false);
-      return;
+      newErrors.push("Password tidak cocok");
+    }
+    if (!formData.agreeToPolicy) {
+      newErrors.push("Anda harus menyetujui kebijakan privasi");
     }
 
-    // Validasi agreement
-    if (!formData.agreeToPolicy) {
-      setError("Anda harus menyetujui kebijakan privasi");
-      setLoading(false);
+    if (newErrors.length > 0) {
+      setErrors(newErrors);
+      // setLoading(false); // Remove loading for validation
       return;
     }
+    setLoading(true);
 
     try {
       // Register the user
@@ -60,8 +77,7 @@ const RegistrationForm = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+          fullName: formData.fullName,
           email: formData.email,
           password: formData.password,
         }),
@@ -70,7 +86,9 @@ const RegistrationForm = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Terjadi kesalahan");
+        setErrors([data.error || "Terjadi kesalahan"]);
+        setLoading(false);
+        return;
       }
 
       // Show success message
@@ -83,8 +101,7 @@ const RegistrationForm = () => {
       window.location.href = "/login";
 
     } catch (err: any) {
-      setError(err.message);
-    } finally {
+      setErrors([err.message]);
       setLoading(false);
     }
   };
@@ -146,23 +163,16 @@ const RegistrationForm = () => {
               <div className="intro-x mt-2 text-center text-slate-400 dark:text-slate-400 xl:hidden">
                 Welcome to Train4best 
               </div>
-              <form onSubmit={handleSubmit} className="intro-x mt-8">
-                <input
-                  type="text"
-                  name="firstName"
-                  placeholder="First Name"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="intro-x block min-w-full px-4 py-3 xl:min-w-[350px] disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-darkmode-800/50 dark:disabled:border-transparent transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-[#373A8D] focus:ring-opacity-20 focus:border-[#373A8D] focus:border-opacity-40 dark:bg-darkmode-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 dark:placeholder:text-slate-500/80 text-slate-700"
-                />
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder="Last Name"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="intro-x mt-4 block min-w-full px-4 py-3 xl:min-w-[350px] disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-darkmode-800/50 dark:disabled:border-transparent transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-[#373A8D] focus:ring-opacity-20 focus:border-[#373A8D] focus:border-opacity-40 dark:bg-darkmode-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 dark:placeholder:text-slate-500/80 text-slate-700"
-                />
+              <form onSubmit={handleSubmit} className="intro-x mt-8" role="form">
+                 <input
+                    type="text"
+                    name="fullName"
+                    placeholder="Full Name"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    className="intro-x block min-w-full px-4 py-3 xl:min-w-[350px] disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-darkmode-800/50 dark:disabled:border-transparent transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-[#373A8D] focus:ring-opacity-20 focus:border-[#373A8D] focus:border-opacity-40 dark:bg-darkmode-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 dark:placeholder:text-slate-500/80 text-slate-700"
+                    required
+                  />
                 <input
                   type="email"
                   name="email"
@@ -217,10 +227,14 @@ const RegistrationForm = () => {
                     Privacy Policy
                   </Link>
                 </div>
-                {/* Tampilkan pesan error jika ada */}
-                {error && (
+                {/* Tampilkan semua pesan error jika ada */}
+                {errors.length > 0 && (
                   <div className="intro-x mt-4 text-red-500 text-sm">
-                    {error}
+                    <ul>
+                      {errors.map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
                 <div className="intro-x mt-5 text-center xl:mt-8 xl:text-left">

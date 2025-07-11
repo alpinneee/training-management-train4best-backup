@@ -9,6 +9,11 @@ const nextConfig = {
         hostname: '*',
       },
     ],
+  },
+  // Memaksa penggunaan SWC
+  swcMinify: true,
+  experimental: {
+    forceSwcTransforms: true,
   }
 }
 
