@@ -1,40 +1,40 @@
-# Train4Best - Course Registration System
+# Train4Best - Sistem Registrasi Kursus
 
-A comprehensive course registration and management system built with Next.js, TypeScript, and Prisma ORM.
+Sistem registrasi dan manajemen kursus komprehensif yang dibangun dengan Next.js, TypeScript, dan Prisma ORM.
 
-## Features
+## Fitur
 
-- User authentication with role-based access control (Admin, Instructor, Participant)
-- Course management and scheduling
-- Participant registration and enrollment tracking
-- Instructor management and assignment
-- Certificate generation and validation
-- Payment processing and verification
-- Interactive dashboards with analytics
-- Responsive design for all devices
+- Autentikasi pengguna dengan kontrol akses berbasis peran (Admin, Instruktur, Peserta)
+- Manajemen kursus dan penjadwalan
+- Registrasi peserta dan pelacakan pendaftaran
+- Manajemen dan penugasan instruktur
+- Pembuatan dan validasi sertifikat
+- Proses pembayaran dan verifikasi
+- Dashboard interaktif dengan analitik
+- Desain responsif untuk semua perangkat
 
-## Tech Stack
+## Teknologi yang Digunakan
 
 - **Frontend**: Next.js, React 18, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Prisma ORM
 - **Database**: MySQL
-- **Authentication**: NextAuth.js, JWT
+- **Autentikasi**: NextAuth.js, JWT
 - **UI Components**: Material UI, Radix UI, shadcn/ui
-- **Charts & Visualization**: Recharts
+- **Chart & Visualisasi**: Recharts
 - **Email**: Nodemailer, Resend
 - **Testing**: Jest, React Testing Library
 
-## Getting Started
+## Memulai
 
-### Prerequisites
+### Prasyarat
 
 - Node.js 18+ 
-- npm or yarn
-- MySQL database
+- npm atau yarn
+- Database MySQL
 
-### Installation
+### Instalasi
 
-1. Clone the repository:
+1. Clone repository:
 ```bash
 git clone <repository-url>
 cd traun4bst-new
@@ -45,131 +45,131 @@ cd traun4bst-new
 npm install
 ```
 
-3. Set up environment variables:
+3. Siapkan environment variable:
 ```bash
 cp .env.example .env.local
 ```
 
-4. Configure your database connection in `.env.local`:
+4. Konfigurasi koneksi database di `.env.local`:
 ```
 DATABASE_URL="mysql://username:password@localhost:3306/train4best"
 NEXTAUTH_SECRET="your-secret-key"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
-5. Run database migrations:
+5. Jalankan migrasi database:
 ```bash
 npx prisma migrate dev
 ```
 
-6. Seed the database:
+6. Seed database:
 ```bash
 npx prisma db seed
 ```
 
-7. Start the development server:
+7. Jalankan server development:
 ```bash
 npm run dev
 ```
 
-## Project Structure
+## Struktur Proyek
 
 ```
 src/
-├── app/                 # Next.js app directory
+├── app/                 # Direktori utama Next.js
 │   ├── api/             # API routes
-│   ├── (auth)/          # Authentication pages
-│   ├── dashboard/       # Admin dashboard
-│   ├── participant/     # Participant pages
-│   ├── instructure/     # Instructor pages
-│   └── ...              # Other pages
-├── components/          # React components
-│   ├── common/          # Shared components
-│   ├── forms/           # Form components
-│   ├── ui/              # UI components
-│   └── ...              # Other component categories
-├── lib/                 # Utilities and configurations
-│   ├── constants/       # Configuration constants
-│   ├── utils/           # Helper functions
-│   └── types/           # TypeScript type definitions
+│   ├── (auth)/          # Halaman autentikasi
+│   ├── dashboard/       # Dashboard admin
+│   ├── participant/     # Halaman peserta
+│   ├── instructure/     # Halaman instruktur
+│   └── ...              # Halaman lainnya
+├── components/          # Komponen React
+│   ├── common/          # Komponen bersama
+│   ├── forms/           # Komponen form
+│   ├── ui/              # Komponen UI
+│   └── ...              # Kategori komponen lain
+├── lib/                 # Utilitas dan konfigurasi
+│   ├── constants/       # Konstanta konfigurasi
+│   ├── utils/           # Fungsi helper
+│   └── types/           # Definisi tipe TypeScript
 ├── contexts/            # React contexts
 └── providers/           # Auth providers
 ```
 
-## Core Features
+## Fitur Inti
 
-### Authentication & Authorization
-- Multi-role user system (Admin, Instructor, Participant)
-- Secure login with NextAuth and JWT
-- Role-based access control
-- Password reset functionality
+### Autentikasi & Otorisasi
+- Sistem multi-peran (Admin, Instruktur, Peserta)
+- Login aman dengan NextAuth dan JWT
+- Kontrol akses berbasis peran
+- Fitur reset password
 
-### Course Management
-- Course creation and scheduling
-- Course type categorization
-- Class management with location, room, and quota settings
-- Course material management
+### Manajemen Kursus
+- Pembuatan dan penjadwalan kursus
+- Kategori tipe kursus
+- Manajemen kelas (lokasi, ruangan, kuota)
+- Manajemen materi kursus
 
-### Participant System
-- Registration and enrollment tracking
-- Payment verification
-- Certificate issuance
-- Performance evaluation
+### Sistem Peserta
+- Registrasi dan pelacakan pendaftaran
+- Verifikasi pembayaran
+- Penerbitan sertifikat
+- Evaluasi performa
 
-### Instructor System
-- Instructor profile management
-- Class assignment
-- Student evaluation
-- Certificate management
+### Sistem Instruktur
+- Manajemen profil instruktur
+- Penugasan kelas
+- Evaluasi siswa
+- Manajemen sertifikat
 
-### Certificate System
-- Automatic certificate generation
-- Certificate validation
-- Expiry tracking
-- PDF generation
+### Sistem Sertifikat
+- Pembuatan sertifikat otomatis
+- Validasi sertifikat
+- Pelacakan masa berlaku
+- Pembuatan PDF sertifikat
 
-### Payment System
-- Multiple payment method support
-- Payment verification
-- Receipt generation
-- Bank account management
+### Sistem Pembayaran
+- Dukungan berbagai metode pembayaran
+- Verifikasi pembayaran
+- Pembuatan bukti pembayaran
+- Manajemen rekening bank
 
-## API Endpoints
+## API Endpoint
 
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/reset-password` - Password reset
-- `POST /api/auth/logout` - User logout
+### Autentikasi
+- `POST /api/auth/login` - Login pengguna
+- `POST /api/auth/register` - Registrasi pengguna
+- `POST /api/auth/reset-password` - Reset password
+- `POST /api/auth/logout` - Logout pengguna
 
-### Courses
-- `GET /api/courses` - Get all courses
-- `POST /api/courses` - Create new course
-- `GET /api/courses/[id]` - Get course by ID
-- `PUT /api/courses/[id]` - Update course
-- `DELETE /api/courses/[id]` - Delete course
+### Kursus
+- `GET /api/courses` - Ambil semua kursus
+- `POST /api/courses` - Buat kursus baru
+- `GET /api/courses/[id]` - Ambil kursus berdasarkan ID
+- `PUT /api/courses/[id]` - Update kursus
+- `DELETE /api/courses/[id]` - Hapus kursus
 
-### Participants
-- `GET /api/participant` - Get all participants
-- `POST /api/participant` - Create participant
-- `GET /api/participant/[id]` - Get participant by ID
-- `GET /api/participant/dashboard` - Get participant dashboard data
+### Peserta
+- `GET /api/participant` - Ambil semua peserta
+- `POST /api/participant` - Tambah peserta
+- `GET /api/participant/[id]` - Ambil peserta berdasarkan ID
+- `GET /api/participant/dashboard` - Data dashboard peserta
 
-### Instructors
-- `GET /api/instructure` - Get all instructors
-- `POST /api/instructure` - Create instructor
-- `GET /api/instructure/[id]` - Get instructor by ID
-- `GET /api/instructure/my-courses` - Get instructor's courses
+### Instruktur
+- `GET /api/instructure` - Ambil semua instruktur
+- `POST /api/instructure` - Tambah instruktur
+- `GET /api/instructure/[id]` - Ambil instruktur berdasarkan ID
+- `GET /api/instructure/my-courses` - Kursus milik instruktur
 
-### Certificates
-- `GET /api/certificate` - Get all certificates
-- `POST /api/certificate` - Create certificate
-- `GET /api/certificate/[id]` - Get certificate by ID
-- `GET /api/certificate-expired` - Get expired certificates
+### Sertifikat
+- `GET /api/certificate` - Ambil semua sertifikat
+- `POST /api/certificate` - Buat sertifikat
+- `GET /api/certificate/[id]` - Ambil sertifikat berdasarkan ID
+- `GET /api/certificate-expired` - Ambil sertifikat yang kadaluarsa
 
-## Database Models
+## Model Database
 
-The project uses Prisma ORM with the following main models:
+Proyek ini menggunakan Prisma ORM dengan model utama:
 - User
 - UserType
 - Course
@@ -184,37 +184,67 @@ The project uses Prisma ORM with the following main models:
 - Attendance
 - ValueReport
 
-## Testing
+## Pengujian
 
-Run tests with:
+Jalankan pengujian dengan:
 
 ```bash
-# Run all tests
+# Jalankan semua pengujian
 npm test
 
-# Run tests in watch mode
+# Mode watch
 npm run test:watch
 
-# Run tests with coverage report
+# Laporan coverage
 npm run test:coverage
 ```
 
 ## Deployment
 
-For production deployment:
+Untuk deployment production:
 
 ```bash
-# Build the application
+# Build aplikasi
 npm run build
 
-# Start the production server
+# Jalankan server production
 npm start
 ```
 
-## License
+## Panduan Penggunaan Resend untuk Kirim Email
 
-This project is licensed under the MIT License.
+1. **Daftar dan dapatkan API Key di [Resend](https://resend.com/)**
+2. **Install package Resend:**
+   ```bash
+   npm install resend
+   ```
+3. **Tambahkan API Key ke environment variable:**
+   ```env
+   RESEND_API_KEY=your-resend-api-key
+   ```
+4. **Contoh penggunaan di kode (misal di file utils/email.js):**
+   ```js
+   import { Resend } from 'resend';
 
-## Support
+   const resend = new Resend(process.env.RESEND_API_KEY);
 
-For support and questions, please contact the development team.
+   export async function sendEmail({ to, subject, html }) {
+     await resend.emails.send({
+       from: 'noreply@yourdomain.com',
+       to,
+       subject,
+       html,
+     });
+   }
+   ```
+5. **Panggil fungsi `sendEmail` saat ingin mengirim email (misal pada proses registrasi, reset password, dsb).**
+
+---
+
+## Lisensi
+
+Proyek ini dilisensikan di bawah MIT License.
+
+## Dukungan
+
+Untuk bantuan dan pertanyaan, silakan hubungi tim pengembang.
