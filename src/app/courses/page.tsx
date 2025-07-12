@@ -199,6 +199,12 @@ export default function Courses() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validasi manual
+    if (!newCourse.course_name.trim() || !newCourse.courseTypeId) {
+      alert("Course name and course type are required");
+      return;
+    }
     
     try {
       const response = await fetch('/api/courses', {
@@ -206,7 +212,12 @@ export default function Courses() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newCourse),
+        body: JSON.stringify({
+          courseName: newCourse.course_name,
+          courseTypeId: newCourse.courseTypeId,
+          description: newCourse.description,
+          image: newCourse.image,
+        }),
       });
       
       if (!response.ok) {
