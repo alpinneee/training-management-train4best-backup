@@ -18,7 +18,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import Modal from "@/components/common/Modal";
-import Layout from "@/components/common/Layout";
+import InstructureLayout from "@/components/layouts/InstructureLayout";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { formatFileSize } from "@/lib/utils/formatFileSize";
@@ -88,6 +88,14 @@ interface CourseSchedule {
   endRegDate: string;
   durationDay: number;
 }
+
+type AttendanceEditData = {
+  id?: string;
+  date?: string;
+  status?: string;
+  mode?: string;
+  // add other fields as needed
+};
 
 const CourseScheduleDetail = () => {
   const params = useParams() as { id: string };
@@ -305,10 +313,10 @@ const CourseScheduleDetail = () => {
   // Tambah state untuk edit/delete attendance
   const [isEditAttendanceModalOpen, setIsEditAttendanceModalOpen] =
     useState(false);
-  const [editAttendanceData, setEditAttendanceData] = useState(null);
+  const [editAttendanceData, setEditAttendanceData] = useState<AttendanceEditData | null>(null);
   const [isDeleteAttendanceModalOpen, setIsDeleteAttendanceModalOpen] =
     useState(false);
-  const [deleteAttendanceId, setDeleteAttendanceId] = useState(null);
+  const [deleteAttendanceId, setDeleteAttendanceId] = useState<string | null>(null);
   const [attendanceActionLoading, setAttendanceActionLoading] = useState(false);
 
   const fetchAllParticipants = async () => {
@@ -1485,7 +1493,7 @@ const CourseScheduleDetail = () => {
   };
 
   // Handler untuk membuka modal absen
-  const handleOpenAbsenModal = (participant) => {
+  const handleOpenAbsenModal = (participant: Participant) => {
     setSelectedAbsenParticipant(participant);
     setIsAbsenModalOpen(true);
     setAbsenStatus("hadir");
@@ -1496,7 +1504,7 @@ const CourseScheduleDetail = () => {
   };
 
   // Handler submit absen
-  const handleSubmitAbsen = async (e) => {
+  const handleSubmitAbsen = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAbsenParticipant) return;
     setAbsenLoading(true);
@@ -1524,7 +1532,7 @@ const CourseScheduleDetail = () => {
       setSelectedAbsenParticipant(null);
       fetchCourseSchedule();
     } catch (err) {
-      setAbsenError(err.message || "Failed to submit attendance");
+      setAbsenError(err instanceof Error ? err.message : "Failed to submit attendance");
     } finally {
       setAbsenLoading(false);
     }
@@ -1555,18 +1563,19 @@ const CourseScheduleDetail = () => {
   };
 
   // Handler edit/delete attendance
-  const handleOpenEditAttendance = (att) => {
+  const handleOpenEditAttendance = (att: any) => {
     setEditAttendanceData({ ...att });
     setIsEditAttendanceModalOpen(true);
   };
-  const handleOpenDeleteAttendance = (id) => {
-    setDeleteAttendanceId(id);
+  const handleOpenDeleteAttendance = (id: string | null) => {
+    setDeleteAttendanceId(id || null);
     setIsDeleteAttendanceModalOpen(true);
   };
-  const handleUpdateAttendance = async (e) => {
+  const handleUpdateAttendance = async (e: React.FormEvent) => {
     e.preventDefault();
     setAttendanceActionLoading(true);
     try {
+      if (!editAttendanceData || !editAttendanceData.date) return; // or handle error
       const absenDate = editAttendanceData.date.slice(0, 10);
       const absenTime = new Date(editAttendanceData.date)
         .toTimeString()
@@ -1588,9 +1597,11 @@ const CourseScheduleDetail = () => {
       if (!res.ok) throw new Error("Failed to update attendance");
       setIsEditAttendanceModalOpen(false);
       setEditAttendanceData(null);
-      await handleOpenAttendanceDetail(selectedAttendanceParticipant);
+      if (selectedAttendanceParticipant) {
+        await handleOpenAttendanceDetail(selectedAttendanceParticipant);
+      }
     } catch (err) {
-      alert(err.message);
+      alert(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setAttendanceActionLoading(false);
     }
@@ -1609,16 +1620,18 @@ const CourseScheduleDetail = () => {
       if (!res.ok) throw new Error("Failed to delete attendance");
       setIsDeleteAttendanceModalOpen(false);
       setDeleteAttendanceId(null);
-      await handleOpenAttendanceDetail(selectedAttendanceParticipant);
+      if (selectedAttendanceParticipant) {
+        await handleOpenAttendanceDetail(selectedAttendanceParticipant);
+      }
     } catch (err) {
-      alert(err.message);
+      alert(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setAttendanceActionLoading(false);
     }
   };
 
   return (
-    <Layout variant="instructure">
+    <InstructureLayout>
       <div className="p-2">
         <div className="flex justify-between items-center mb-2">
           <h1 className="text-lg md:text-xl text-gray-700">
@@ -2739,13 +2752,15 @@ const CourseScheduleDetail = () => {
                 <input
                   type="datetime-local"
                   name="date"
-                  value={editAttendanceData.date}
-                  onChange={(e) =>
-                    setEditAttendanceData({
-                      ...editAttendanceData,
-                      date: e.target.value,
-                    })
-                  }
+                  value={editAttendanceData?.date}
+                  onChange={(e) => {
+                    if (editAttendanceData) {
+                      setEditAttendanceData({
+                        ...editAttendanceData,
+                        date: e.target.value,
+                      });
+                    }
+                  }}
                   className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
@@ -2755,13 +2770,15 @@ const CourseScheduleDetail = () => {
                 </label>
                 <select
                   name="status"
-                  value={editAttendanceData.status}
-                  onChange={(e) =>
-                    setEditAttendanceData({
-                      ...editAttendanceData,
-                      status: e.target.value,
-                    })
-                  }
+                  value={editAttendanceData?.status}
+                  onChange={(e) => {
+                    if (editAttendanceData) {
+                      setEditAttendanceData({
+                        ...editAttendanceData,
+                        status: e.target.value,
+                      });
+                    }
+                  }}
                   className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="present">Present</option>
@@ -2772,13 +2789,15 @@ const CourseScheduleDetail = () => {
                 <label className="block text-xs text-gray-700 mb-1">Mode</label>
                 <select
                   name="mode"
-                  value={editAttendanceData.mode}
-                  onChange={(e) =>
-                    setEditAttendanceData({
-                      ...editAttendanceData,
-                      mode: e.target.value,
-                    })
-                  }
+                  value={editAttendanceData?.mode}
+                  onChange={(e) => {
+                    if (editAttendanceData) {
+                      setEditAttendanceData({
+                        ...editAttendanceData,
+                        mode: e.target.value,
+                      });
+                    }
+                  }}
                   className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="offline">Offline</option>
@@ -2842,7 +2861,7 @@ const CourseScheduleDetail = () => {
           </Modal>
         )}
       </div>
-    </Layout>
+    </InstructureLayout>
   );
 };
 

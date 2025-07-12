@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Layout from '@/components/common/Layout';
+import ParticipantLayout from "@/components/layouts/ParticipantLayout";
 import CourseCard from '@/components/course/CourseCard';
 import Modal from '@/components/common/Modal';
 import { useRouter } from 'next/navigation';
@@ -871,7 +871,7 @@ export default function MyCoursePage() {
   };
   
   return (
-    <Layout variant="participant">
+    <ParticipantLayout>
       <div className="p-2 sm:p-3 max-w-7xl mx-auto">
         <h1 className="text-xl font-bold text-gray-800 mb-3">Available Courses</h1>
         
@@ -1061,6 +1061,6 @@ export default function MyCoursePage() {
           </Modal>
         )}
       </div>
-    </Layout>
+    </ParticipantLayout>
   );
 } 

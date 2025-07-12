@@ -16,7 +16,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Modal from "@/components/common/Modal";
-import Layout from "@/components/common/Layout";
+import ParticipantLayout from "@/components/layouts/ParticipantLayout";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import ELearningTab from "@/components/training/ELearningTab";
@@ -1170,17 +1170,17 @@ const CourseScheduleDetail = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <ParticipantLayout>
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
 
   if (error) {
     return (
-      <Layout>
+      <ParticipantLayout>
         <div className="p-2">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
             {error}
@@ -1194,13 +1194,13 @@ const CourseScheduleDetail = () => {
             Back to Schedules
           </Button>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
 
   if (!courseDetails) {
     return (
-      <Layout>
+      <ParticipantLayout>
         <div className="p-2">
           <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded mb-4">
             Course schedule not found
@@ -1214,12 +1214,12 @@ const CourseScheduleDetail = () => {
             Back to Schedules
           </Button>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
 
   return (
-    <Layout variant="participant">
+    <ParticipantLayout>
       <div className="p-2">
         <div className="flex justify-between items-center mb-2">
           <h1 className="text-lg md:text-xl text-gray-700">
@@ -2443,7 +2443,7 @@ const CourseScheduleDetail = () => {
           </Modal>
         )}
       </div>
-    </Layout>
+    </ParticipantLayout>
   );
 };
 

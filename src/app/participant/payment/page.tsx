@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Table from "@/components/common/table";
-import Layout from "@/components/common/Layout";
+import ParticipantLayout from "@/components/layouts/ParticipantLayout";
 import { useRouter } from "next/navigation";
 
 interface Payment {
@@ -274,7 +274,7 @@ export default function PaymentReport() {
   // Render konfigurasi database jika belum terkonfigurasi
   if (!isDbConfigured) {
     return (
-      <Layout variant="participant">
+      <ParticipantLayout>
         <div className="p-2">
           <div className="space-y-4 py-8">
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-md text-sm">
@@ -292,12 +292,12 @@ export default function PaymentReport() {
             </div>
           </div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
 
   return (
-    <Layout variant="participant">
+    <ParticipantLayout>
       <div className="p-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
           <h1 className="text-lg md:text-xl text-gray-700">My Payment</h1>
@@ -331,6 +331,6 @@ export default function PaymentReport() {
           )}
         </div>
       </div>
-    </Layout>
+    </ParticipantLayout>
   );
 }

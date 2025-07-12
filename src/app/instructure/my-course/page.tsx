@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Layout from '@/components/common/Layout';
+import InstructureLayout from "@/components/layouts/InstructureLayout";
 import { useRouter } from 'next/navigation';
+
 
 // Define interfaces for type safety
 interface Course {
@@ -83,7 +84,7 @@ export default function InstructureMyCourse() {
   };
   
   return (
-    <Layout variant="instructure">
+    <InstructureLayout>
       <div className="p-2 sm:p-3 max-w-7xl mx-auto">
         <h1 className="text-xl font-bold text-gray-800 mb-3">My Courses</h1>
         
@@ -203,6 +204,6 @@ export default function InstructureMyCourse() {
           </div>
         )}
       </div>
-    </Layout>
+    </InstructureLayout>
   );
 } 

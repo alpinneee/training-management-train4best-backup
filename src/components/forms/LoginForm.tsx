@@ -50,9 +50,24 @@ const LoginForm = () => {
       if (data.user) {
         localStorage.setItem("userEmail", data.user.email);
         localStorage.setItem("username", data.user.name);
+        
+        // Store userType-specific data
+        const userType = data.user.userType?.toLowerCase();
+        if (userType === 'admin') {
+          localStorage.setItem("admin_login_timestamp", Date.now().toString());
+          localStorage.setItem("admin_email", data.user.email);
+        } else if (userType === 'instructure') {
+          localStorage.setItem("instructure_login_timestamp", Date.now().toString());
+          localStorage.setItem("instructure_email", data.user.email);
+        } else if (userType === 'participant') {
+          localStorage.setItem("participant_login_timestamp", Date.now().toString());
+          localStorage.setItem("participant_email", data.user.email);
+        }
+        
         console.log("Stored user data in localStorage:", { 
           email: data.user.email, 
-          username: data.user.name 
+          username: data.user.name,
+          userType: data.user.userType
         });
       }
       

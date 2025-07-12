@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Layout from "@/components/common/Layout";
+import ParticipantLayout from "@/components/layouts/ParticipantLayout";
 import { ArrowLeft, Upload, CheckCircle, AlertCircle, Image as ImageIcon, Printer } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -136,17 +136,17 @@ export default function PaymentPage() {
   
   if (loading) {
     return (
-      <Layout variant="participant">
+      <ParticipantLayout>
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
   
   if (error || !paymentDetails) {
     return (
-      <Layout variant="participant">
+      <ParticipantLayout>
         <div className="p-3">
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start">
             <AlertCircle className="text-red-500 mr-2 mt-0.5" size={18} />
@@ -162,12 +162,12 @@ export default function PaymentPage() {
             </div>
           </div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
   
   return (
-    <Layout variant="participant">
+    <ParticipantLayout>
       <div className="hidden print:block bg-[#362d98] text-white py-3 px-4 mb-3">
         <div className="flex justify-between items-center">
           <div className="font-bold text-xl">Train4Best</div>
@@ -361,6 +361,6 @@ export default function PaymentPage() {
           nav, footer, .print\\:hidden { display: none !important; }
         }
       `}</style>
-    </Layout>
+    </ParticipantLayout>
   );
 } 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Button from "@/components/common/button";
-import Layout from "@/components/common/Layout";
+import ParticipantLayout from "@/components/layouts/ParticipantLayout";
 
 interface Participant {
   id: string;
@@ -146,7 +146,7 @@ const EditParticipantPage = () => {
   };
 
   return (
-    <Layout>
+    <ParticipantLayout>
       <div className="p-2">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-lg md:text-xl text-gray-600">Edit Participant</h1>
@@ -342,7 +342,7 @@ const EditParticipantPage = () => {
           </form>
         )}
       </div>
-    </Layout>
+    </ParticipantLayout>
   );
 };
 

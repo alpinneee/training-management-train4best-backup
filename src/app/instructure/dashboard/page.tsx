@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import Layout from "@/components/common/Layout";
+import InstructureLayout from "@/components/layouts/InstructureLayout";
 import InstructureProfileSetup from "@/components/InstructureProfileSetup";
 import { 
   BookOpen, 
@@ -13,6 +13,8 @@ import {
   GraduationCap,
   MessageSquare
 } from "lucide-react";
+
+  
 
 // Helper function to get cookies
 function getCookie(name: string): string | undefined {
@@ -136,8 +138,8 @@ const DashboardPage = () => {
   };
 
   return (
-    <Layout variant="instructure">
-      <div className="p-4">
+    <InstructureLayout>
+      <div className="p-4 mt-3 ">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -177,7 +179,7 @@ const DashboardPage = () => {
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow mb-6">
           <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
+            <nav className="flex -mb-px mt-3">
               <button
                 onClick={() => setActiveTab("courses")}
                 className={`py-3 px-4 text-sm font-medium ${
@@ -319,7 +321,7 @@ const DashboardPage = () => {
           />
         )}
       </div>
-    </Layout>
+    </InstructureLayout>
   );
 };
 

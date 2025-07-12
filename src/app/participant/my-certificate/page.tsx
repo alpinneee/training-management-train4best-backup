@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import Layout from "@/components/common/Layout";
+import ParticipantLayout from "@/components/layouts/ParticipantLayout";
 import { X, Download, Eye, Printer, Info } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -403,7 +403,7 @@ const MyCertificatePage = () => {
   };
 
   return (
-    <Layout variant="participant">
+    <ParticipantLayout>
       <div className="p-3 sm:p-4 max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3">
           <h1 className="text-xl font-semibold text-gray-700 mb-2 sm:mb-0">
@@ -584,7 +584,7 @@ const MyCertificatePage = () => {
         onClose={closeDetailModal}
         certificateId={detailModal.certificateId}
       />
-    </Layout>
+    </ParticipantLayout>
   );
 };
 

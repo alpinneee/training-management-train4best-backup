@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Layout from '@/components/common/Layout';
+import ParticipantLayout from '@/components/layouts/ParticipantLayout';
 import Link from 'next/link';
 
 interface CourseRegistration {
@@ -129,18 +129,18 @@ export default function ParticipantCourses() {
   
   if (loading) {
     return (
-      <Layout variant="participant">
+      <ParticipantLayout>
         <div className="p-4">
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
   
   return (
-    <Layout variant="participant">
+    <ParticipantLayout>
       <div className="p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl md:text-2xl font-semibold text-gray-800">Kursus Terdaftar</h1>
@@ -265,6 +265,6 @@ export default function ParticipantCourses() {
           </div>
         )}
       </div>
-    </Layout>
+    </ParticipantLayout>
   );
 } 

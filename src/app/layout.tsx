@@ -21,6 +21,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
+
     <html lang="en">
       <head>
         <meta
@@ -31,28 +32,6 @@ export default function RootLayout({
         <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
         <meta name="description" content="Train4Best - Management Training Platform" />
         
-        {/* Script untuk mencegah reload otomatis yang mengganggu session */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Deteksi reload dan simpan status di localStorage
-              window.addEventListener('beforeunload', function() {
-                localStorage.setItem('reloading', 'true');
-              });
-              
-              // Cek apakah sedang reload
-              if(localStorage.getItem('reloading') === 'true') {
-                // Reset status reload
-                localStorage.setItem('reloading', 'false');
-                
-                // Cek cookie next-auth.session-token masih ada
-                if(document.cookie.includes('next-auth.session-token') || document.cookie.includes('debug_token')) {
-                  console.log('Session token exists after reload');
-                }
-              }
-            `,
-          }}
-        />
       </head>
       <body className={`${inter.className} bg-gray-50`}>
         <Script src="https://apis.google.com/js/platform.js" strategy="afterInteractive" />

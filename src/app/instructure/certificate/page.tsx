@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Layout from "@/components/common/Layout";
+import InstructureLayout from "@/components/layouts/InstructureLayout";
 import { X, Download, Eye, ExternalLink, Award } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
@@ -394,7 +394,7 @@ export default function InstructureCertificatePage() {
   };
 
   return (
-    <Layout>
+    <InstructureLayout>
       <div className="container mx-auto px-2 sm:px-4 py-4">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-xl font-bold text-gray-800 flex items-center">
@@ -547,6 +547,6 @@ export default function InstructureCertificatePage() {
         driveLink={previewModal.driveLink}
         certificateNumber={previewModal.certificateNumber}
       />
-    </Layout>
+    </InstructureLayout>
   );
 }

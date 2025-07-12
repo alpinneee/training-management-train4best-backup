@@ -156,7 +156,7 @@ export default function ProfilePage() {
       return;
     }
 
-    try {
+    try { 
       console.log("Fetching profile data for email:", emailToUse);
 
       // Determine the endpoint based on user role
@@ -554,60 +554,31 @@ export default function ProfilePage() {
 
   // Combine data from all possible sources
   const getUserData = (): UserData => {
-    // Check localStorage for user type first
+    // Ambil userType dari localStorage dulu
     const userType = typeof window !== "undefined" ? localStorage.getItem("userType") || "" : "";
     const userEmail = typeof window !== "undefined" ? localStorage.getItem("userEmail") || "" : "";
     const username = typeof window !== "undefined" ? localStorage.getItem("username") || "" : "";
 
-    console.log("getUserData localStorage values:", {
-      userType,
-      userEmail,
-      username,
-    });
-
-    // Determine if user is instructor based on userType
-    const isInstructor = userType.toLowerCase().includes("instruct") || false;
-
-    // Try session first
-    if (session?.user) {
-      console.log("getUserData using session data:", session.user);
-      return {
-        name: session.user.name || username || "",
-        email: session.user.email || userEmail || "",
-        role: isInstructor
-          ? "Instructure"
-          : session.user.userType || "participant",
-      };
-    }
-
-    // Try localStorage for admin
-    const adminEmail = typeof window !== "undefined" ? localStorage.getItem("admin_email") || "" : "";
-    const adminTimestamp = typeof window !== "undefined" ? localStorage.getItem("admin_login_timestamp") || "" : "";
-    if (adminEmail && adminTimestamp) {
-      console.log("getUserData using admin data");
-      return {
-        name: adminEmail.split("@")[0] || "Admin",
-        email: adminEmail,
-        role: "Admin",
-      };
-    }
-
-    // Use userType from localStorage if available
+    // Fallback ke session jika localStorage kosong
     if (userType) {
-      console.log("getUserData using localStorage userType:", userType);
       return {
         name: formData.fullName || username || "User",
         email: formData.email || userEmail || "",
         role: userType,
       };
     }
-
-    // Fallback to form data
-    console.log("getUserData using formData fallback");
+    if (session?.user) {
+      return {
+        name: session.user.name || username || "",
+        email: session.user.email || userEmail || "",
+        role: session.user.userType || "participant",
+      };
+    }
+    // Fallback terakhir
     return {
       name: formData.fullName || "User",
       email: formData.email || "",
-      role: isInstructor ? "Instructure" : "participant",
+      role: "participant",
     };
   };
 

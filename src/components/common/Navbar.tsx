@@ -132,7 +132,7 @@ const Navbar: FC<NavbarProps> = ({ onMobileMenuClick }) => {
 
   return (
     <>
-      <nav className="bg-[#362d98] text-white py-2 px-4 mt-3 mx-4 rounded-2xl shadow-md">
+      <nav className="bg-[#362d98] text-white py-2 px-4 mt-2 mx-4 rounded-2xl shadow-md">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             {/* Bagian kiri - Menu & Logo */}

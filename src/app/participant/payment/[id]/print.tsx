@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import ParticipantLayout from "@/components/layouts/ParticipantLayout";
 
 interface BankAccount {
   id: string;
@@ -95,6 +96,7 @@ export default function PaymentPrintPage() {
   }
   
   return (
+    <ParticipantLayout>
     <div className="p-8 max-w-3xl mx-auto">
       {/* Header */}
       <div className="bg-[#362d98] text-white py-4 px-6 mb-6 rounded-lg">
@@ -255,5 +257,6 @@ export default function PaymentPrintPage() {
         }
       `}</style>
     </div>
+    </ParticipantLayout>
   );
 } 

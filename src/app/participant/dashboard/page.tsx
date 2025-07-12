@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Layout from "@/components/common/Layout";
+import ParticipantLayout from "@/components/layouts/ParticipantLayout";
 import { 
   BookOpen, 
   FileText, 
@@ -155,7 +155,7 @@ const DashboardPage = () => {
   // Show database configuration if needed
   if (!isDbConfigured) {
     return (
-      <Layout variant="participant">
+      <ParticipantLayout>
         <div className="p-4">
           <div className="bg-white rounded-lg shadow p-6 max-w-lg mx-auto">
             <h2 className="text-xl font-medium text-gray-800 mb-4">Database Configuration Required</h2>
@@ -177,39 +177,39 @@ const DashboardPage = () => {
             </button>
           </div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
 
   // Show loading state
   if (loading) {
     return (
-      <Layout variant="participant">
+      <ParticipantLayout>
         <div className="p-4 flex justify-center items-center min-h-[50vh]">
           <div className="flex flex-col items-center">
             <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-2" />
             <p className="text-gray-500">Loading dashboard data...</p>
           </div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
 
   // Show error state
   if (error) {
     return (
-      <Layout variant="participant">
+      <ParticipantLayout>
         <div className="p-4">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
             <p>{error}</p>
           </div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
 
   return (
-    <Layout variant="participant">
+    <ParticipantLayout>
       <div className="p-4">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -385,7 +385,7 @@ const DashboardPage = () => {
           )}
         </div>
       </div>
-    </Layout>
+    </ParticipantLayout>
   );
 };
 

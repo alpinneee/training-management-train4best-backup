@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Layout from "@/components/common/Layout";
+import ParticipantLayout from "@/components/layouts/ParticipantLayout";
 import { ArrowLeft, Download, Printer } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
@@ -93,17 +93,17 @@ export default function ParticipantCertificateDetailPage() {
 
   if (loading) {
     return (
-      <Layout variant="participant">
+      <ParticipantLayout>
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
 
   if (error || !certificate) {
     return (
-      <Layout variant="participant">
+      <ParticipantLayout>
         <div className="p-4">
           <div className="text-center p-6 bg-gray-50 rounded-md">
             <p className="text-gray-500">{error || "Sertifikat tidak ditemukan"}</p>
@@ -115,12 +115,12 @@ export default function ParticipantCertificateDetailPage() {
             </Link>
           </div>
         </div>
-      </Layout>
+      </ParticipantLayout>
     );
   }
 
   return (
-    <Layout variant="participant">
+    <ParticipantLayout>
       <div className="p-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
@@ -261,6 +261,6 @@ export default function ParticipantCertificateDetailPage() {
           </div>
         </div>
       </div>
-    </Layout>
+    </ParticipantLayout>
   );
 } 
