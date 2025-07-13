@@ -1,47 +1,38 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import LogoutModal from '@/components/common/LogoutModal';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
+import LogoutModal from "@/components/common/LogoutModal";
 
 export default function DebugLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { data: session, status } = useSession();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [result, setResult] = useState<{
-    success?: boolean;
-    message?: string;
-    user?: {
-      id?: string;
-      email?: string;
-      name?: string;
-      userType?: string;
-    }
-  } | null>(null);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<any>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  // Get email from URL query param and check login status
   useEffect(() => {
-    // Handle URL query parameters
-    const params = new URLSearchParams(window.location.search);
-    const emailParam = params.get('email');
-    if (emailParam) {
-      setEmail(emailParam);
+    if (status === "authenticated" && session?.user) {
+      setLoggedIn(true);
+      setResult({
+        success: true,
+        user: session.user,
+        message: "User is authenticated via NextAuth"
+      });
+    } else if (status === "unauthenticated") {
+      setLoggedIn(false);
+      setResult(null);
     }
-    
-    // Check if user is already logged in
-    handleDebugSessionCheck(true);
-  }, []);
+  }, [session, status]);
 
   const handleDebugSessionCheck = async (silent = false) => {
     try {
-      if (!silent) {
-        setLoading(true);
-        setError('');
-      }
+      setLoading(true);
       
       const response = await fetch('/api/debug-session');
       const data = await response.json();
@@ -50,17 +41,20 @@ export default function DebugLoginPage() {
         setResult(data);
       }
       
-      // Update login status
-      setLoggedIn(data.hasSession || data.hasToken);
-    } catch (error: any) {
-      if (!silent) {
-        setError('Error checking session: ' + (error?.message || 'Unknown error'));
+      console.log("Debug session check result:", data);
+      
+      if (data.hasToken || data.hasSession) {
+        setLoggedIn(true);
+      } else {
+        setLoggedIn(false);
       }
-      console.error("Session check error:", error);
+    } catch (error) {
+      console.error("Error checking session:", error);
+      if (!silent) {
+        setError("Error checking session");
+      }
     } finally {
-      if (!silent) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
@@ -70,52 +64,42 @@ export default function DebugLoginPage() {
       setLoading(true);
       setError('');
       
-      // Bersihkan sesi yang mungkin ada terlebih dahulu
-      try {
-        await fetch('/api/logout');
-      } catch (error) {
-        // Ignore error, just continue
-      }
-      
-      // Lakukan login langsung
-      const response = await fetch('/api/direct-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      // Use NextAuth signIn
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
       });
       
-      const data = await response.json();
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
       
-      if (response.ok) {
+      if (result?.ok) {
         setResult({
-          ...data,
-          message: data.message + " - Mengarahkan ke halaman profil dalam 2 detik..."
+          success: true,
+          message: "Login successful via NextAuth - Redirecting to profile page in 2 seconds..."
         });
         
-        // Verifikasi login berhasil dengan cek sesi
-        const sessionCheck = await fetch('/api/debug-session');
-        const sessionData = await sessionCheck.json();
+        // Get session data to verify login
+        const sessionResponse = await fetch('/api/auth/session');
+        const sessionData = await sessionResponse.json();
         
-        if (sessionData.hasToken || sessionData.hasSession || data.user?.email) {
-          // Login berhasil, alihkan ke halaman profil dengan parameter email
-          // Gunakan email dari response jika tersedia
-          const emailToUse = data.user?.email || email;
-          console.log("Login berhasil, mengalihkan ke halaman profil...");
+        if (sessionData?.user) {
+          console.log("Login successful, redirecting to profile page...");
           setTimeout(() => {
-            window.location.href = `/profile?email=${encodeURIComponent(emailToUse)}`;
+            window.location.href = `/profile?email=${encodeURIComponent(sessionData.user.email)}`;
           }, 1500);
         } else {
-          // Login gagal, tampilkan pesan error
-          setError('Login berhasil tapi sesi tidak tersimpan. Silakan coba lagi.');
+          setError('Login successful but session not stored. Please try again.');
           console.error("Login failed: Session not stored");
         }
       } else {
-        setError(data.error || 'Login gagal');
+        setError("Login failed");
       }
     } catch (error: any) {
-      setError('Error login: ' + (error?.message || 'Unknown error'));
+      setError('Login error: ' + (error?.message || 'Unknown error'));
       console.error("Login error:", error);
     } finally {
       setLoading(false);
@@ -128,8 +112,8 @@ export default function DebugLoginPage() {
 
   // Add direct profile access function
   const goToProfile = () => {
-    if (result?.user?.email) {
-      window.location.href = `/profile?email=${encodeURIComponent(result.user.email)}`;
+    if (session?.user?.email) {
+      window.location.href = `/profile?email=${encodeURIComponent(session.user.email)}`;
     } else {
       window.location.href = '/profile';
     }
@@ -143,13 +127,13 @@ export default function DebugLoginPage() {
           
           {loggedIn ? (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md mb-4">
-              <p className="font-medium">Status: <span className="text-green-600">Sudah Login</span></p>
-              <p className="text-sm mt-1">Anda dapat langsung mengakses halaman profil.</p>
+              <p className="font-medium">Status: <span className="text-green-600">Already Logged In</span></p>
+              <p className="text-sm mt-1">You can directly access the profile page.</p>
               <button
                 onClick={goToProfile}
                 className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md"
               >
-                Langsung ke Profil &rarr;
+                Go to Profile &rarr;
               </button>
             </div>
           ) : null}
@@ -190,7 +174,7 @@ export default function DebugLoginPage() {
                   disabled={loading}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md"
                 >
-                  {loading ? 'Memproses...' : 'Login Langsung'}
+                  {loading ? 'Processing...' : 'Login'}
                 </button>
               ) : (
                 <button
@@ -199,7 +183,7 @@ export default function DebugLoginPage() {
                   disabled={loading}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md"
                 >
-                  {loading ? 'Memproses...' : 'Logout'}
+                  {loading ? 'Processing...' : 'Logout'}
                 </button>
               )}
               
@@ -209,7 +193,7 @@ export default function DebugLoginPage() {
                 disabled={loading}
                 className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md"
               >
-                Cek Sesi
+                Check Session
               </button>
             </div>
           </form>
@@ -220,14 +204,14 @@ export default function DebugLoginPage() {
                 onClick={goToProfile}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md w-full"
               >
-                Lanjut ke Halaman Profil
+                Continue to Profile Page
               </button>
             </div>
           )}
           
           {result && (
             <div className="mt-6 bg-gray-50 p-4 rounded-md">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Hasil:</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Result:</h3>
               <pre className="text-xs overflow-auto bg-white p-2 rounded border">
                 {JSON.stringify(result, null, 2)}
               </pre>
@@ -237,7 +221,7 @@ export default function DebugLoginPage() {
                   onClick={() => window.location.href = `/profile?email=${encodeURIComponent(result.user!.email!)}`}
                   className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md"
                 >
-                  Akses Profil Sekarang
+                  Access Profile Now
                 </button>
               )}
             </div>
@@ -249,12 +233,12 @@ export default function DebugLoginPage() {
             onClick={() => router.push('/profile')}
             className="text-sm text-blue-600 hover:underline"
           >
-            Kembali ke Profile
+            Back to Profile
           </button>
         </div>
       </div>
       
-      {/* Modal Logout */}
+      {/* Logout Modal */}
       <LogoutModal 
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}

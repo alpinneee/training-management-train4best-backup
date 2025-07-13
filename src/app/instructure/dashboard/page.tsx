@@ -314,12 +314,13 @@ const DashboardPage = () => {
         ) : null}
         
         {/* Instructure Profile Setup - will show if profile completion is needed */}
-        {session?.user?.id && (
+        {/* Hapus atau komen baris berikut: */}
+        {/* {session?.user?.id && (
           <InstructureProfileSetup 
             userId={session.user.id} 
             username={session.user.name || ''} 
           />
-        )}
+        )} */}
       </div>
     </InstructureLayout>
   );

@@ -18,7 +18,6 @@ export async function GET() {
     cookieStore.delete("admin_token");
     cookieStore.delete("participant_token");
     cookieStore.delete("dashboard_token");
-    cookieStore.delete("force_login");
     
     console.log("All authentication cookies cleared");
     

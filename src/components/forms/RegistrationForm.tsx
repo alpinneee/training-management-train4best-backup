@@ -92,13 +92,15 @@ const RegistrationForm = () => {
       }
 
       // Show success message
-      toast?.success?.("Registrasi berhasil! Silakan login untuk melanjutkan.");
+      toast?.success?.("Registration successful! Redirecting to profile setup...");
 
-      // Wait a bit before redirecting to login page
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirect to login page
-      window.location.href = "/login";
+      // Login otomatis setelah register
+      await signIn("credentials", {
+        redirect: false,
+        email: formData.email,
+        password: formData.password,
+      });
+      window.location.href = "/profile";
 
     } catch (err: any) {
       setErrors([err.message]);

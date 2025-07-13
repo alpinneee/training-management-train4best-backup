@@ -11,8 +11,9 @@ jest.mock('next/navigation', () => ({
   }),
 }));
 
+const mockSignIn = jest.fn();
 jest.mock('next-auth/react', () => ({
-  signIn: jest.fn(),
+  signIn: mockSignIn,
   useSession: () => ({
     data: null,
     status: 'unauthenticated',
@@ -49,20 +50,20 @@ describe('LoginForm Component', () => {
 
   it('handles form submission with valid credentials', async () => {
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
+    mockSignIn.mockResolvedValueOnce({
+      ok: true,
+      error: null
+    });
+    
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        success: true,
         user: {
           email: 'test@example.com',
           name: 'Test User',
           userType: 'participant'
-        },
-        redirectUrl: '/participant/dashboard'
-      }),
-      headers: {
-        get: jest.fn()
-      }
+        }
+      })
     } as any);
 
     render(<LoginForm />);
@@ -76,28 +77,19 @@ describe('LoginForm Component', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('/api/direct-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: 'test@example.com',
-          password: 'password123'
-        }),
+      expect(mockSignIn).toHaveBeenCalledWith('credentials', {
+        email: 'test@example.com',
+        password: 'password123',
+        redirect: false,
       });
     });
   });
 
   it('handles form submission with invalid credentials', async () => {
-    const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
-    mockFetch.mockResolvedValueOnce({
+    mockSignIn.mockResolvedValueOnce({
       ok: false,
-      json: async () => ({
-        success: false,
-        error: 'Invalid credentials'
-      })
-    } as any);
+      error: 'Invalid credentials'
+    });
 
     render(<LoginForm />);
     
@@ -110,7 +102,7 @@ describe('LoginForm Component', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockSignIn).toHaveBeenCalled();
     });
   });
 
@@ -140,8 +132,7 @@ describe('LoginForm Component', () => {
   });
 
   it('shows loading state during form submission', async () => {
-    const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
-    mockFetch.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+    mockSignIn.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ ok: true }), 100)));
 
     render(<LoginForm />);
     
@@ -165,11 +156,11 @@ describe('LoginForm Component', () => {
     expect(forgotPasswordLink).toHaveAttribute('href', '/reset-password');
   });
 
-  it('renders register link', () => {
+  it('renders sign up link', () => {
     render(<LoginForm />);
     
-    const registerLink = screen.getByText('Register');
-    expect(registerLink).toBeInTheDocument();
-    expect(registerLink).toHaveAttribute('href', '/register');
+    const signUpLink = screen.getByText('Sign up');
+    expect(signUpLink).toBeInTheDocument();
+    expect(signUpLink).toHaveAttribute('href', '/register');
   });
 }); 

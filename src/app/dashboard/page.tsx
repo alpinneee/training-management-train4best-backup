@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Layout from "@/components/common/Layout";
 import DashboardLayout from './DashboardLayout';
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 // Fallback data in case API fails
 const fallbackTrainingData = [
@@ -46,6 +47,7 @@ const fallbackUpcomingTrainings = [
 ];
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     trainingData: fallbackTrainingData,
@@ -60,55 +62,28 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Set admin token in localStorage for direct access
-    localStorage.setItem("admin_login_timestamp", Date.now().toString());
-    localStorage.setItem("admin_email", "admin@example.com");
-    
-    // Check if we already have admin token first
-    const checkExistingToken = async () => {
-      try {
-        // Check if we have admin token in cookies
-        const response = await fetch('/api/auth/session-check');
-        const data = await response.json();
-        
-        if (data.valid) {
-          console.log("Valid session found, fetching dashboard data directly");
-          fetchDashboardData();
-          return;
-        }
-        
-        // If no valid token, then try force login
-        setupAccess();
-      } catch (err) {
-        console.error("Error checking session:", err);
-        setupAccess();
-      }
-    };
-    
-    // Setup force login token first to ensure we have access
-    const setupAccess = async () => {
-      try {
-        // Force login to ensure we have a token
-        const forceResponse = await fetch('/api/force-login?userType=admin');
-        const forceData = await forceResponse.json();
-        
-        if (!forceData.success) {
-          setError("Failed to setup access token");
-          setIsLoading(false);
-          return;
-        }
-        
-        // Now fetch dashboard data
-        fetchDashboardData();
-      } catch (err) {
-        console.error("Error setting up access:", err);
-        setError("Failed to setup access");
-        setIsLoading(false);
-      }
-    };
-    
-    checkExistingToken();
-  }, []);
+    // Wait for session to be loaded
+    if (status === "loading") {
+      return;
+    }
+
+    // Check if user is authenticated
+    if (status === "unauthenticated" || !session?.user) {
+      setError("Authentication required");
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if user is admin
+    if (session.user.userType?.toLowerCase() !== "admin") {
+      setError("Admin access required");
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch dashboard data
+    fetchDashboardData();
+  }, [session, status]);
   
   const fetchDashboardData = async () => {
     try {
@@ -121,9 +96,9 @@ export default function DashboardPage() {
             certificationTypeData: data.data.certificationTypeData || fallbackCertificationTypeData,
             upcomingTrainings: data.data.upcomingTrainings || fallbackUpcomingTrainings,
             user: {
-              id: data.data.user?.id || '',
-              name: data.data.user?.name || 'User',
-              userType: data.data.user?.userType || 'User'
+              id: data.data.user?.id || session?.user?.id || '',
+              name: data.data.user?.name || session?.user?.name || 'User',
+              userType: data.data.user?.userType || session?.user?.userType || 'User'
             }
           });
         }
@@ -148,11 +123,8 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <div className="flex flex-col space-y-3">
-              <Link href="/dashboard-fix" className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded transition-colors">
-                Try Dashboard Fix
-              </Link>
-              <Link href="/dashboard-bypass-direct" className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded transition-colors">
-                Try Direct Bypass
+              <Link href="/login" className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded transition-colors">
+                Go to Login
               </Link>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import Layout from "@/components/common/Layout";
+import { signOut } from "next-auth/react";
 
 // Define types
 interface UserData {
@@ -505,7 +506,7 @@ export default function ProfilePage() {
       );
 
       if (response.ok) {
-        setMessage({ text: "Profil berhasil diperbarui!", type: "success" });
+        setMessage({ text: "Profil berhasil diperbarui! Silakan login ulang.", type: "success" });
 
         // Store email in localStorage for persistence
         if (formData.email) {
@@ -531,10 +532,14 @@ export default function ProfilePage() {
           localStorage.setItem("hasProfile", "true");
         }
 
-        // Reload the page after a short delay
+        // Redirect logic
         setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+          if (!isInstructor && userRole?.toLowerCase().includes("participant")) {
+            signOut({ callbackUrl: "/auth/login" });
+          } else {
+            window.location.reload();
+          }
+        }, 1200);
       } else {
         setMessage({
           text: data.error || "Gagal memperbarui profil",

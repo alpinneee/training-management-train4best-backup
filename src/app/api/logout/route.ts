@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   try {
     const cookieStore = cookies();
     
-    // Hapus semua cookie yang terkait dengan autentikasi
+    // Remove all authentication-related cookies
     cookieStore.delete("next-auth.session-token");
     cookieStore.delete("next-auth.csrf-token");
     cookieStore.delete("next-auth.callback-url");
@@ -15,15 +15,14 @@ export async function GET(req: Request) {
     cookieStore.delete("admin_token");
     cookieStore.delete("participant_token");
     cookieStore.delete("dashboard_token");
-    cookieStore.delete("force_login");
     
-    // Perbarui response dengan setting cookie kosong
+    // Update response with empty cookie settings
     const response = NextResponse.json({
       success: true,
-      message: "Berhasil logout"
+      message: "Successfully logged out"
     });
     
-    // Tambahan: set cookie dengan expired date di masa lalu untuk memastikan browser hapus
+    // Set cookies with expired date to ensure browser removes them
     response.cookies.set("next-auth.session-token", "", { expires: new Date(0) });
     response.cookies.set("debug_token", "", { expires: new Date(0) });
     response.cookies.set("admin_token", "", { expires: new Date(0) });

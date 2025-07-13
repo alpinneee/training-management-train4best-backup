@@ -3,7 +3,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, getSession, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
@@ -25,120 +25,46 @@ const LoginForm = () => {
     try {
       console.log("Login attempt with:", { email });
       
-      // Use direct login API instead of NextAuth signIn
-      const response = await fetch('/api/direct-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      // Use NextAuth signIn
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
       });
       
-      const data = await response.json();
-      console.log("Direct login response:", data);
+      console.log("NextAuth signIn result:", result);
       
-      if (!data.success) {
-        setError(data.error || "Login failed");
-        toast.error(data.error || "Login failed");
+      if (result?.error) {
+        setError(result.error);
+        toast.error(result.error);
         return;
       }
       
-      // Login successful
-      toast.success("Login successful!");
-      
-      // Store user data in localStorage
-      if (data.user) {
-        localStorage.setItem("userEmail", data.user.email);
-        localStorage.setItem("username", data.user.name);
-        
-        // Store userType-specific data
-        const userType = data.user.userType?.toLowerCase();
-        if (userType === 'admin') {
-          localStorage.setItem("admin_login_timestamp", Date.now().toString());
-          localStorage.setItem("admin_email", data.user.email);
-        } else if (userType === 'instructure') {
-          localStorage.setItem("instructure_login_timestamp", Date.now().toString());
-          localStorage.setItem("instructure_email", data.user.email);
-        } else if (userType === 'participant') {
-          localStorage.setItem("participant_login_timestamp", Date.now().toString());
-          localStorage.setItem("participant_email", data.user.email);
+      if (result?.ok) {
+        // Polling session sampai user muncul
+        let sessionData = null;
+        for (let i = 0; i < 10; i++) {
+          sessionData = await getSession();
+          if (sessionData?.user) break;
+          await new Promise(res => setTimeout(res, 200));
         }
-        
-        console.log("Stored user data in localStorage:", { 
-          email: data.user.email, 
-          username: data.user.name,
-          userType: data.user.userType
-        });
-      }
-      
-      // Get redirect URL from the response body or header, or use default based on user type
-      let redirectPath = data.redirectUrl;
-      
-      if (!redirectPath) {
-        // Fallback to header
-        redirectPath = response.headers.get('X-Redirect-URL');
-      }
-      
-      if (!redirectPath) {
-        // Fallback to user type based redirect
-        const userType = data.user?.userType?.toLowerCase();
-        
-        if (userType === 'admin') {
-          // redirectPath = '/.ldashboard';
-          
-          console.log("Admin user detected, redirecting to /user");
-        } else if (userType === 'instructure') {
-          redirectPath = '/instructure-dashboard';
-          console.log("Instructor user detected, redirecting to /instructure-dashboard");
-        } else if (userType === 'participant') {
-          redirectPath = '/participant-dashboard';
-          console.log("Participant user detected, redirecting to /participant-dashboard");
-        } else if (userType === 'unassigned') {
-          redirectPath = '/profile';
-          console.log("Unassigned user detected, redirecting to profile page to complete registration");
+        if (sessionData?.user) {
+          toast.success("Login successful!");
+          const userType = sessionData.user.userType?.toLowerCase();
+          let redirectPath = "/dashboard";
+          if (userType === 'admin') redirectPath = "/dashboard";
+          else if (userType === 'instructure') redirectPath = "/instructure/dashboard";
+          else if (userType === 'participant') redirectPath = "/participant/dashboard";
+          else if (userType === 'unassigned') redirectPath = "/profile";
+          router.push(redirectPath);
         } else {
-          redirectPath = '/dashboard-static';
-          console.log("Unknown user type, redirecting to /dashboard-static");
+          setError("Failed to fetch session");
+          toast.error("Failed to fetch session");
         }
+      } else {
+        setError("Login failed");
+        toast.error("Login failed");
       }
-      
-      console.log("Redirecting to:", redirectPath, "for user type:", data.user?.userType);
-      
-      // Special handling for admin users
-      const isAdmin = data.user?.userType?.toLowerCase() === 'admin';
-      const delay = isAdmin ? 1200 : 800; // Longer delay for admin users
-      
-      if (isAdmin) {
-        console.log("ADMIN LOGIN: Using longer delay for admin redirect:", delay, "ms");
-        
-        // For admin users, we'll use a more direct approach
-        console.log("ADMIN LOGIN: Adding special admin flag to localStorage");
-        localStorage.setItem("admin_login_timestamp", Date.now().toString());
-        localStorage.setItem("admin_email", data.user.email);
-        
-        // Override redirectPath for admin
-        redirectPath = "/dashboard";
-      } else if (data.user?.userType?.toLowerCase() === 'participant') {
-        // Ensure participant users go to the participant dashboard
-        console.log("PARTICIPANT LOGIN: Ensuring participant dashboard redirect");
-        redirectPath = "/participant/dashboard";
-        
-        // Store user email in localStorage for participant dashboard usage
-        localStorage.setItem("userEmail", data.user.email);
-      }
-      
-      // Add a delay to ensure cookies are set
-      setTimeout(() => {
-        // Use window.location for a hard redirect to avoid client-side routing issues
-        if (isAdmin) {
-          console.log("ADMIN LOGIN: Executing redirect to", redirectPath);
-          
-          // For admin, use a different approach - direct URL with reload
-          window.location.replace(redirectPath);
-        } else {
-          window.location.href = redirectPath;
-        }
-      }, delay);
       
     } catch (error) {
       console.error("Login error:", error);
@@ -149,9 +75,6 @@ const LoginForm = () => {
       setLoading(false);
     }
   };
-
-  // Display link to debug login
- 
 
   return (
     <motion.div
@@ -283,10 +206,19 @@ const LoginForm = () => {
                   transition={{ duration: 0.6, delay: 0.6 }}
                   className="intro-x mt-4 flex text-xs text-slate-600 dark:text-slate-500 sm:text-sm"
                 >
-          
-                  <Link href="/reset-password" className="text-[#373A8D]">
-                    Forgot Password?
-                  </Link>
+                  <div className="flex items-center mr-auto">
+                    <input
+                      id="remember-me"
+                      type="checkbox"
+                      className="form-check-input border mr-2"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                    <label className="cursor-pointer select-none" htmlFor="remember-me">
+                      Remember me
+                    </label>
+                  </div>
+                  <Link href="/reset-password">Forgot Password?</Link>
                 </motion.div>
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}

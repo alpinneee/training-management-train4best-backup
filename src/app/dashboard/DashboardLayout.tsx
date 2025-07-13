@@ -7,7 +7,6 @@ import Link from "next/link";
 import Card from "@/components/common/card";
 import { StatisticsChart, DistributionChart } from './ChartComponents';
 import { TrainingCalendar } from './CalendarComponent';
-import InstructureProfileSetup from '@/components/InstructureProfileSetup';
 
 interface User {
   id: string;
@@ -214,17 +213,6 @@ export default function DashboardLayout({
           />
         </motion.div>
       </motion.div>
-
-      {/* This component will check if the user is an instructure who needs to complete their profile */}
-      {/* Instructure should be redirected to their own dashboard, so this is not needed here */}
-      {/* {user.userType === 'Instructure' && (
-        <InstructureProfileSetup 
-          userId={user.id} 
-          username={user.name || ''} 
-        />
-      )} */}
-      
-    
     </motion.div>
   );
 } 
