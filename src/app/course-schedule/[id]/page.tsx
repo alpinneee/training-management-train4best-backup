@@ -3707,49 +3707,7 @@ const CourseScheduleDetail = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
                   />
                 </div>
-
-                <div>
-                  <label
-                    htmlFor="pdfFile"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Upload Certificate PDF
-                  </label>
-                  <input
-                    type="file"
-                    id="pdfFile"
-                    name="pdfFile"
-                    accept="application/pdf"
-                    onChange={handleInstructureCertificateFileChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
-                  />
-                  {instructureCertificateData.pdfUrl && (
-                    <div className="mt-2 text-xs text-gray-600">
-                      <a
-                        href={instructureCertificateData.pdfUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline flex items-center gap-1"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-                          />
-                        </svg>
-                        Existing PDF file
-                      </a>
-                    </div>
-                  )}
-                </div>
+   
 
                 <div>
                   <label

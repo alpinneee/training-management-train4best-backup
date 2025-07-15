@@ -257,26 +257,6 @@ export default function InstructureCertificatePage() {
   const [instructureId, setInstructureId] = useState<string>("");
   const [instructureName, setInstructureName] = useState<string>("");
   
-  // Add a debug function to check certificates directly
-  const checkCertificatesDirectly = async (id: string) => {
-    if (!id) return;
-    
-    try {
-      const response = await fetch(`/api/check-instructor-certificates?id=${id}`);
-      const data = await response.json();
-      
-      console.log("Debug Certificate Check:", data);
-      
-      if (data.hasCertificates) {
-        toast.success(`Found ${data.certificateCount} certificates for ${data.instructor.name}`);
-      } else {
-        toast.error(`No certificates found for instructor ${id}`);
-      }
-    } catch (error) {
-      console.error("Debug check failed:", error);
-    }
-  };
-  
   // Effect to check for ID in URL on mount
   useEffect(() => {
     // Get ID from URL query parameter
@@ -284,16 +264,33 @@ export default function InstructureCertificatePage() {
     const idFromUrl = url.searchParams.get('id');
     
     if (idFromUrl) {
-      console.log("Found ID in URL:", idFromUrl);
       setInstructureId(idFromUrl);
       fetchCertificates(idFromUrl);
-      
-      // Also run a debug check
-      checkCertificatesDirectly(idFromUrl);
     } else {
-      console.log("No ID found in URL");
+      // Try to get current user's instructure ID
+      fetchCurrentInstructureId();
     }
   }, []);
+  
+  // Tambahan: fungsi untuk mendapatkan ID instructure dari sesi saat ini
+  const fetchCurrentInstructureId = async () => {
+    try {
+      const response = await fetch('/api/instructure/me');
+      if (!response.ok) {
+        return;
+      }
+      
+      const data = await response.json();
+      
+      if (data.instructure?.id) {
+        setInstructureId(data.instructure.id);
+        setInstructureName(data.instructure.name || data.instructure.full_name || "");
+        fetchCertificates(data.instructure.id);
+      }
+    } catch (error) {
+      console.error("Error fetching current instructure:", error);
+    }
+  };
 
   const fetchCertificates = async (id: string) => {
     if (!id) {
@@ -304,9 +301,7 @@ export default function InstructureCertificatePage() {
     try {
       setLoading(true);
       setError(null);
-      console.log("Fetching certificates for instructure ID:", id);
       
-      // Using the direct API endpoint for better debugging
       const response = await fetch("/api/instructure/certificate/direct", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -314,22 +309,18 @@ export default function InstructureCertificatePage() {
       });
       
       const data = await response.json();
-      console.log("Certificate API response:", data);
       
       if (response.ok) {
         if (data.certificates?.length > 0) {
-          console.log("Found certificates:", data.certificates.length);
           setCertificates(data.certificates || []);
           setInstructureName(data.instructure?.name || "");
           toast.success(`${data.certificates.length} sertifikat ditemukan`);
         } else {
-          console.log("No certificates found for instructor:", id);
           setCertificates([]);
           setInstructureName(data.instructure?.name || "");
           setError("Tidak ada sertifikat ditemukan");
         }
       } else {
-        console.error("API error:", data.error);
         toast.error(data.error || "Gagal memuat sertifikat");
         setError(data.error || "Gagal memuat sertifikat");
         setCertificates([]);
@@ -474,32 +465,10 @@ export default function InstructureCertificatePage() {
               </div>
             ))}
           </div>
-        ) : instructureId && !loading ? (
+        ) : instructureId && !loading && certificates.length === 0 ? (
           <div className="text-center py-8 px-4 bg-gray-50 rounded-lg">
             <Award size={40} className="mx-auto text-gray-400 mb-2" />
             <p className="text-gray-500 text-sm">No certificates found</p>
-            
-            {/* Diagnostic section */}
-            <div className="mt-4 border-t border-gray-200 pt-4">
-              <h3 className="font-medium text-sm text-gray-600 mb-2">Troubleshooting</h3>
-              <div className="space-y-1 text-xs">
-                <p className="text-gray-500">Instructor ID: {instructureId}</p>
-                <button
-                  onClick={() => checkCertificatesDirectly(instructureId)}
-                  className="mt-1 py-1 px-2 bg-blue-100 text-blue-700 rounded text-xs"
-                >
-                  Check Certificates Again
-                </button>
-                <a
-                  href={`/api/check-instructor-certificates?id=${instructureId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block mt-1 py-1 px-2 bg-green-100 text-green-700 rounded text-xs"
-                >
-                  Direct API Check
-                </a>
-              </div>
-            </div>
           </div>
         ) : null}
 

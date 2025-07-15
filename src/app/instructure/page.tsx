@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useE  fect } from "react";
 
 import Button from "@/components/common/button";
 import Layout from "@/components/common/Layout";

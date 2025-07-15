@@ -1,71 +1,71 @@
-# Train4Best Security Improvements
+# Peningkatan Keamanan Train4Best
 
-This document outlines the security improvements made to Train4Best to prepare it for production deployment.
+Dokumen ini menguraikan peningkatan keamanan yang dilakukan pada Train4Best untuk mempersiapkannya dalam penerapan produksi.
 
-## Authentication System Changes
+## Perubahan Sistem Autentikasi
 
-### 1. NextAuth Configuration Improvements
-- Implemented secure cookie settings for production
-- Added proper `httpOnly`, `secure`, and `sameSite` flags to all cookies
-- Configured dynamic cookie names based on environment (using `__Secure-` prefix in production)
-- Set explicit max-age for all session cookies
+### 1. Peningkatan Konfigurasi NextAuth
+- Menerapkan pengaturan cookie yang aman untuk produksi
+- Menambahkan flag `httpOnly`, `secure`, dan `sameSite` yang tepat ke semua cookie
+- Mengonfigurasi nama cookie dinamis berdasarkan lingkungan (menggunakan awalan `__Secure-` di produksi)
+- Menetapkan max-age eksplisit untuk semua cookie sesi
 
-### 2. Removal of LocalStorage for Authentication
-- Eliminated all usage of localStorage for storing sensitive authentication data
-- Migrated user authentication data to server-side session and secure HTTP-only cookies
-- Updated all layout components (Admin, Instructor, Participant) to use secure authentication methods
+### 2. Penghapusan LocalStorage untuk Autentikasi
+- Menghilangkan semua penggunaan localStorage untuk menyimpan data autentikasi sensitif
+- Memindahkan data autentikasi pengguna ke sesi sisi server dan cookie HTTP-only yang aman
+- Memperbarui semua komponen layout (Admin, Instruktur, Peserta) untuk menggunakan metode autentikasi yang aman
 
-### 3. Middleware Enhancement
-- Improved middleware to prioritize NextAuth sessions
-- Implemented proper validation of all tokens
-- Added secure cookie settings for all authentication cookies
-- Created a clearly defined list of public routes
-- Fixed inconsistent redirect paths
-- Added proper debug logging that's disabled in production
+### 3. Peningkatan Middleware
+- Memperbaiki middleware untuk memprioritaskan sesi NextAuth
+- Menerapkan validasi yang tepat untuk semua token
+- Menambahkan pengaturan cookie yang aman untuk semua cookie autentikasi
+- Membuat daftar rute publik yang jelas
+- Memperbaiki jalur pengalihan yang tidak konsisten
+- Menambahkan logging debug yang tepat yang dinonaktifkan di produksi
 
-### 4. Session Verification API
-- Updated `/api/auth/session-check` endpoint to properly validate tokens
-- Implemented a token validation priority order (NextAuth first, then other tokens)
-- Added proper error handling
+### 4. API Verifikasi Sesi
+- Memperbarui endpoint `/api/auth/session-check` untuk memvalidasi token dengan benar
+- Menerapkan urutan prioritas validasi token (NextAuth terlebih dahulu, kemudian token lainnya)
+- Menambahkan penanganan kesalahan yang tepat
 
-### 5. Secure Logout Implementation
-- Created a comprehensive logout system that clears all authentication cookies
-- Implemented proper cookie expiration for all auth tokens
-- Added fallback mechanisms to ensure successful logout
+### 5. Implementasi Logout yang Aman
+- Membuat sistem logout komprehensif yang menghapus semua cookie autentikasi
+- Menerapkan kedaluwarsa cookie yang tepat untuk semua token autentikasi
+- Menambahkan mekanisme fallback untuk memastikan logout berhasil
 
-## Production Configuration
-For production deployment, update your environment variables in the `.env` file:
+## Konfigurasi Produksi
+Untuk penerapan produksi, perbarui variabel lingkungan Anda di file `.env`:
 
 ```
-# Base URL
-NEXT_PUBLIC_BASE_URL=https://your-production-domain.com
+# URL Dasar
+NEXT_PUBLIC_BASE_URL=https://domain-produksi-anda.com
 
-# NextAuth Configuration
-NEXTAUTH_URL=https://your-production-domain.com
-# Generate a strong random secret for production
-# You can use: openssl rand -base64 32
-NEXTAUTH_SECRET=REPLACE_WITH_STRONG_SECRET_IN_PRODUCTION
+# Konfigurasi NextAuth
+NEXTAUTH_URL=https://domain-produksi-anda.com
+# Hasilkan secret acak yang kuat untuk produksi
+# Anda dapat menggunakan: openssl rand -base64 32
+NEXTAUTH_SECRET=GANTI_DENGAN_SECRET_KUAT_DI_PRODUKSI
 NEXTAUTH_DEBUG=false
 
-# Node Environment
+# Lingkungan Node
 NODE_ENV=production
 
-# Set to false for production
+# Setel ke false untuk produksi
 NEXT_PUBLIC_DISABLE_AUTH=false
 ```
 
-## Additional Security Recommendations
+## Rekomendasi Keamanan Tambahan
 
-1. **HTTPS Deployment**: Always deploy in a HTTPS environment to protect cookie transmission
-2. **Regular Secret Rotation**: Change NEXTAUTH_SECRET periodically
-3. **Session Monitoring**: Implement session monitoring for suspicious activities
-4. **Rate Limiting**: Add rate limiting to authentication endpoints
-5. **Content Security Policy**: Implement a strict Content Security Policy
-6. **Security Headers**: Add proper security headers (X-Frame-Options, X-Content-Type-Options, etc.)
-7. **Regular Security Audits**: Conduct regular security audits of the application
+1. **Penerapan HTTPS**: Selalu terapkan di lingkungan HTTPS untuk melindungi transmisi cookie
+2. **Rotasi Secret Rutin**: Ubah NEXTAUTH_SECRET secara berkala
+3. **Pemantauan Sesi**: Terapkan pemantauan sesi untuk aktivitas mencurigakan
+4. **Rate Limiting**: Tambahkan pembatasan laju ke endpoint autentikasi
+5. **Content Security Policy**: Terapkan Kebijakan Keamanan Konten yang ketat
+6. **Header Keamanan**: Tambahkan header keamanan yang tepat (X-Frame-Options, X-Content-Type-Options, dll.)
+7. **Audit Keamanan Rutin**: Lakukan audit keamanan aplikasi secara berkala
 
-## Next Steps
-- Implement CSRF protection for all API endpoints
-- Add two-factor authentication
-- Implement IP-based rate limiting
-- Set up automated security scanning 
+## Langkah Selanjutnya
+- Menerapkan perlindungan CSRF untuk semua endpoint API
+- Menambahkan autentikasi dua faktor
+- Menerapkan pembatasan laju berbasis IP
+- Menyiapkan pemindaian keamanan otomatis 
