@@ -68,26 +68,11 @@ export async function GET(
     } catch (dbError) {
       console.error("Database error:", dbError);
       
-      // Jika terjadi error database, kembalikan data dummy untuk demo
-      const dummyRegistration = {
-        id: registrationId,
-        courseId: 'course_1',
-        courseName: 'AIoT (Artificial Intelligence of Things)',
-        className: 'Jakarta - Jan 25',
-        schedule: '25 Jan 2024 - 28 Jan 2024',
-        registrationDate: '2024-01-10',
-        amount: 1500000,
-        status: 'Unpaid',
-        registrationId: registrationId
-      };
-      
+      // Return database error
       return NextResponse.json({
-        data: dummyRegistration,
-        meta: {
-          message: "Menggunakan data dummy karena terjadi error database",
-          error: dbError instanceof Error ? dbError.message : "Unknown error"
-        }
-      });
+        error: "Database error",
+        details: dbError instanceof Error ? dbError.message : "Unknown error"
+      }, { status: 500 });
     }
   } catch (error) {
     console.error("Fatal error fetching registration:", error);

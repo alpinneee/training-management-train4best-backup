@@ -73,31 +73,6 @@ export async function POST(request: Request, { params }: Params) {
       console.error("Error executing direct SQL query:", sqlError);
     }
     
-    // For demo IDs, return mock success response
-    if (id.startsWith('demo-') || id.startsWith('payment_')) {
-      console.log(`Mock verification for ID: ${id}, isApproved: ${isApproved}`);
-      
-      // Extract registration ID from payment ID if it's a payment_ format
-      let registrationId = id.startsWith('payment_') 
-        ? id.split('_')[2] // Assuming format is payment_timestamp_registrationId
-        : `demo-reg-${id.split('-')[1]}`;
-      
-      return corsResponse({
-        success: true,
-        message: isApproved ? "Payment has been approved (mock)" : "Payment has been rejected (mock)",
-        payment: {
-          id: id,
-          status: isApproved ? "Paid" : "Rejected",
-          registrationId: registrationId
-        },
-        registration: {
-          id: registrationId,
-          status: isApproved ? "Registered" : "Rejected",
-          paymentStatus: isApproved ? "Paid" : "Rejected"
-        }
-      });
-    }
-    
     // Verify payment exists
     console.log("Checking if payment exists in database...");
     let payment = await prisma.payment.findUnique({

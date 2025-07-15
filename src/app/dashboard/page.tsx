@@ -46,6 +46,28 @@ const fallbackUpcomingTrainings = [
   },
 ];
 
+const fallbackTrends = {
+  trainers: { value: 5, isUp: true },
+  participants: { value: 12, isUp: true },
+  trainings: { value: 3, isUp: false },
+  certificates: { value: 8, isUp: true },
+  programs: { value: 2, isUp: true },
+};
+
+const fallbackCounts = {
+  trainers: 12,
+  participants: 254,
+  trainings: 18,
+  certificates: 156,
+  programs: 24
+};
+
+const fallbackTopPerformance = [
+  { title: "Web Development", value: 92, color: "bg-blue-600" },
+  { title: "Project Management", value: 85, color: "bg-green-600" },
+  { title: "Data Science", value: 78, color: "bg-purple-600" }
+];
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
@@ -53,6 +75,9 @@ export default function DashboardPage() {
     trainingData: fallbackTrainingData,
     certificationTypeData: fallbackCertificationTypeData,
     upcomingTrainings: fallbackUpcomingTrainings,
+    counts: fallbackCounts,
+    trends: fallbackTrends,
+    topTrainingPerformance: fallbackTopPerformance,
     user: {
       id: '',
       name: '',
@@ -95,6 +120,9 @@ export default function DashboardPage() {
             trainingData: data.data.trainingData || fallbackTrainingData,
             certificationTypeData: data.data.certificationTypeData || fallbackCertificationTypeData,
             upcomingTrainings: data.data.upcomingTrainings || fallbackUpcomingTrainings,
+            counts: data.data.counts || fallbackCounts,
+            trends: data.data.trends || fallbackTrends,
+            topTrainingPerformance: data.data.topTrainingPerformance || fallbackTopPerformance,
             user: {
               id: data.data.user?.id || session?.user?.id || '',
               name: data.data.user?.name || session?.user?.name || 'User',
@@ -149,8 +177,11 @@ export default function DashboardPage() {
         trainingData={dashboardData.trainingData}
         certificationTypeData={dashboardData.certificationTypeData}
         upcomingTrainings={dashboardData.upcomingTrainings}
-        localeString="id-ID"
+        localeString="en-US"
         user={dashboardData.user}
+        counts={dashboardData.counts}
+        trends={dashboardData.trends}
+        topTrainingPerformance={dashboardData.topTrainingPerformance}
       />
     </Layout>
   );

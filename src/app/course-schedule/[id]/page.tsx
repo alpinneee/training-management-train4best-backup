@@ -423,71 +423,29 @@ const CourseScheduleDetail = () => {
       const data = await response.json();
       console.log("Instructors API response:", data);
 
-      // Create dummy data if no instructors are returned
+      // Handle case when no instructors are returned
       if (!data.data || data.data.length === 0) {
-        console.log("No instructors found, creating dummy data");
-        const dummyInstructors = [
-          {
-            id: "1",
-            full_name: "John Doe",
-            phone_number: "123-456-7890",
-            profiency: "Web Development",
-          },
-          {
-            id: "2",
-            full_name: "Jane Smith",
-            phone_number: "234-567-8901",
-            profiency: "Data Science",
-          },
-          {
-            id: "3",
-            full_name: "Bob Johnson",
-            phone_number: "345-678-9012",
-            profiency: "Mobile Development",
-          },
-        ];
-        setAllInstructors(dummyInstructors);
+        console.log("No instructors found in the system");
+        setAllInstructors([]);
         return;
       }
 
       // Transform the data to match the Instructor interface
       const instructors = data.data.map((instructor: any) => {
-        console.log("Processing instructor:", instructor);
         return {
           id: instructor.id,
           full_name: instructor.fullName || instructor.name || "Unknown",
-          phone_number:
-            instructor.phone_number || instructor.phoneNumber || "-",
+          phone_number: instructor.phone_number || instructor.phoneNumber || "-",
           profiency: instructor.profiency || instructor.proficiency || "",
         };
       });
 
-      console.log("Transformed instructors:", instructors);
       setAllInstructors(instructors);
     } catch (error) {
       console.error("Error fetching instructors:", error);
-      // Set dummy data in case of error
-      const dummyInstructors = [
-        {
-          id: "1",
-          full_name: "John Doe",
-          phone_number: "123-456-7890",
-          profiency: "Web Development",
-        },
-        {
-          id: "2",
-          full_name: "Jane Smith",
-          phone_number: "234-567-8901",
-          profiency: "Data Science",
-        },
-        {
-          id: "3",
-          full_name: "Bob Johnson",
-          phone_number: "345-678-9012",
-          profiency: "Mobile Development",
-        },
-      ];
-      setAllInstructors(dummyInstructors);
+      // Return empty array in case of error
+      setAllInstructors([]);
+      toast.error("Failed to load instructors data");
     }
   };
 

@@ -753,14 +753,8 @@ export default function PaymentReport() {
         }
       } else {
         console.error("Invalid response format:", responseData);
-        // Use mock data in development
-        if (process.env.NODE_ENV === "development") {
-          console.log("Using mock data due to invalid response format");
-          setPayments(getMockPayments());
-        } else {
-          setPayments([]);
-          toast.error("Invalid data format received");
-        }
+        setPayments([]);
+        toast.error("Invalid data format received");
       }
     } catch (error) {
       console.error("Failed to fetch payments:", error);
@@ -770,62 +764,9 @@ export default function PaymentReport() {
           error instanceof Error ? error.message : String(error)
         }`
       );
-
-      // If we're in development, add some demo data
-      if (process.env.NODE_ENV === "development") {
-        // Only add demo data if no filters are applied
-        if (!searchQuery && !paymentMethod && !startDate && !endDate) {
-          console.log(
-            "Adding fallback demo data for development (no filters applied)"
-          );
-          setPayments(getMockPayments());
-        } else {
-          console.log("No fallback data added because filters are applied");
-        }
-      }
     } finally {
       setLoading(false);
     }
-  };
-
-  // Mock data for development
-  const getMockPayments = () => {
-    // Using fixed amounts for demonstration
-    const amount1 = 1000000;
-    const amount2 = 1500000;
-
-    return [
-      {
-        id: "demo-1",
-        no: 1,
-        nama: "Demo User",
-        tanggal: new Date().toISOString().split("T")[0],
-        paymentMethod: "Transfer Bank",
-        nomorReferensi: "TRF-DEMO-001",
-        // Format with correct Indonesian currency format
-        jumlah: "Rp1.000.000",
-        amount: amount1,
-        status: "Paid" as "Paid" | "Unpaid" | "Pending" | "Rejected",
-        registrationId: "demo-reg-1",
-        paymentProof: "/uploads/payment-proofs/sample-receipt.jpg",
-        courseName: "Demo Course",
-      },
-      {
-        id: "demo-2",
-        no: 2,
-        nama: "Demo User 2",
-        tanggal: new Date().toISOString().split("T")[0],
-        paymentMethod: "E-Wallet",
-        nomorReferensi: "EWL-DEMO-002",
-        // Format with correct Indonesian currency format
-        jumlah: "Rp1.500.000",
-        amount: amount2,
-        status: "Pending" as "Paid" | "Unpaid" | "Pending" | "Rejected",
-        registrationId: "demo-reg-2",
-        paymentProof: "/uploads/payment-proofs/sample-receipt-2.jpg",
-        courseName: "Demo Course 2",
-      },
-    ];
   };
 
   // Delete payment

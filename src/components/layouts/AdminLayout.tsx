@@ -21,14 +21,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     const checkAdminAccess = async () => {
       setIsLoading(true);
-      // Check localStorage for admin flag (used by direct-login)
-      const adminLoginTimestamp = localStorage.getItem("admin_login_timestamp");
-      const adminEmail = localStorage.getItem("admin_email");
-      if (adminLoginTimestamp && adminEmail) {
-        setIsAdmin(true);
-        setIsLoading(false);
-        return;
-      }
+      
       // Check NextAuth session
       if (status === "authenticated" && session?.user) {
         const userType = String(session.user.userType || "").toLowerCase();
@@ -37,13 +30,39 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           setIsLoading(false);
           return;
         }
+      } else if (status === "loading") {
+        // Wait for a short time to allow session to load
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Check cookies directly if session still loading
+        const hasCookies = document.cookie.includes("admin_token") || 
+                          document.cookie.includes("next-auth.session-token");
+        
+        if (hasCookies) {
+          // Verify with backend
+          try {
+            const response = await fetch('/api/auth/session-check');
+            const data = await response.json();
+            
+            if (data.isAuthenticated && data.userType?.toLowerCase() === 'admin') {
+              console.log("Admin access confirmed via API");
+              setIsAdmin(true);
+              setIsLoading(false);
+              return;
+            }
+          } catch (error) {
+            console.error("Error checking admin session:", error);
+          }
+        }
       }
+      
       setIsLoading(false);
     };
+    
     checkAdminAccess();
   }, [status, session, router]);
 
-  // Redirect jika tidak punya akses admin
+  // Redirect if no admin access
   useEffect(() => {
     if (!isLoading && !isAdmin) {
       toast.error("You don't have permission to access this page");

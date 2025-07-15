@@ -248,3 +248,84 @@ Proyek ini dilisensikan di bawah MIT License.
 ## Dukungan
 
 Untuk bantuan dan pertanyaan, silakan hubungi tim pengembang.
+
+## Database Setup and Connection
+
+### Setting Up MySQL Database
+
+1. Make sure MySQL is installed and running on your system.
+2. Create a new database for the application:
+```sql
+CREATE DATABASE train4best;
+```
+
+3. Configure database connection in your `.env.local` file:
+```
+DATABASE_URL="mysql://username:password@localhost:3306/train4best"
+```
+Replace `username` and `password` with your MySQL credentials.
+
+### Ensuring Dashboard Database Connection
+
+The dashboard uses database connections to display real-time statistics including:
+
+- Active trainer counts
+- Active participants
+- Ongoing trainings
+- Certificates issued
+- Training performance metrics
+- Monthly training data
+
+To ensure proper dashboard functionality:
+
+1. Verify your database connection is working:
+```bash
+npx prisma db pull
+```
+This should reflect your database schema in the Prisma models.
+
+2. Run migrations if needed:
+```bash
+npx prisma migrate dev
+```
+
+3. Seed essential data:
+```bash
+npx prisma db seed
+```
+
+4. Troubleshooting database connections:
+   - Check that MySQL is running
+   - Verify credentials in `.env.local` are correct
+   - Ensure database user has appropriate permissions
+   - Check for database connection errors in console logs
+   - Verify Prisma schema matches database structure
+
+If the dashboard displays fallback data instead of real data, this indicates a database connection issue. Check the API logs in the developer console for specific errors.
+
+### Database Models Used by Dashboard
+
+The dashboard relies on the following models:
+- `Class` - For active training counts
+- `Instructure` - For trainer statistics
+- `Participant` - For participant data
+- `Course` - For course and program information
+- `Certificate` - For certificate metrics
+- `CourseType` - For training type distribution
+- `ValueReport` - For training performance metrics
+
+### Database Queries Optimization
+
+To improve dashboard performance:
+1. Ensure proper indexes on frequently queried fields
+2. Consider adding the following indexes if not already present:
+```sql
+CREATE INDEX idx_class_dates ON class(start_date, end_date);
+CREATE INDEX idx_certificate_issue_date ON certificate(issueDate);
+CREATE INDEX idx_instructure_class ON instructureclass(instructureId, classId);
+```
+
+3. Run MySQL query optimization:
+```sql
+OPTIMIZE TABLE class, instructure, participant, certificate, course;
+```

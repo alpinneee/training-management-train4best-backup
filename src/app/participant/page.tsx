@@ -521,11 +521,11 @@ const ParticipantPage = () => {
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
-                  className="text-xs px-2 py-1"
+                  className="text-xs px-2 py-1 text-gray-700"
                 >
                   Previous
                 </Button>
-                <span className="text-xs flex items-center px-2">
+                <span className="text-xs flex items-center px-2 text-gray-700">
                   Page {currentPage} of {totalPages}
                 </span>
                 <Button
@@ -535,7 +535,7 @@ const ParticipantPage = () => {
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
-                  className="text-xs px-2 py-1"
+                  className="text-xs px-2 py-1 text-gray-700"
                 >
                   Next
                 </Button>

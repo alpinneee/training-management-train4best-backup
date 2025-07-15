@@ -20,54 +20,37 @@ export default function ParticipantCourses() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
-  const [useDummyData, setUseDummyData] = useState(false);
   
   useEffect(() => {
     const fetchRegistrations = async () => {
+      setLoading(true);
+      setError(null);
+      
       try {
-        // If using dummy data, skip API call
-        if (useDummyData) {
-          setDummyData();
-          return;
+        // Get user email from localStorage if available
+        const userEmail = localStorage.getItem('userEmail');
+        console.log('Attempting to fetch registrations with user email:', userEmail);
+        
+        // Build API URL with email parameter if available
+        let url = '/api/registration?limit=50';
+        if (userEmail) {
+          url += `&email=${encodeURIComponent(userEmail)}&filterByUser=true`;
         }
         
-        // Get user email from localStorage
-        const userEmail = localStorage.getItem('userEmail') || '';
-        console.log('Fetching registrations with email:', userEmail);
-        setDebugInfo(`Email yang digunakan: ${userEmail || 'Tidak ada email'}`);
-        
-        if (!userEmail) {
-          setDebugInfo('Tidak ada email yang tersimpan di localStorage. Silakan mendaftar atau masuk terlebih dahulu.');
-          setDummyData();
-          return;
-        }
-        
-        // Use the new dedicated API
-        const url = `/api/user-registrations?email=${encodeURIComponent(userEmail)}&_=${Date.now()}`;
-        console.log('Using new API endpoint:', url);
-        
+        console.log('Fetching registrations from:', url);
         const response = await fetch(url);
-        console.log('Registration API response status:', response.status);
         
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`API error: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('Registration API data:', data);
+        console.log('Registration API response:', data);
         
-        if (data && data.data && Array.isArray(data.data)) {
-          console.log('Found registrations:', data.data.length);
+        if (data.data && Array.isArray(data.data) && data.data.length > 0) {
           setRegistrations(data.data);
-          
-          if (data.data.length > 0) {
-            setDebugInfo(`Ditemukan ${data.data.length} pendaftaran untuk email ${userEmail}`);
-          } else {
-            setDebugInfo(`Tidak ada pendaftaran ditemukan untuk email ${userEmail}`);
-            // Don't show dummy data automatically
-          }
+          setDebugInfo(`Ditemukan ${data.data.length} pendaftaran kursus.`);
         } else {
-          // No registrations found, but don't use dummy data by default
           setDebugInfo(`Tidak ada pendaftaran ditemukan untuk email ${userEmail}. API response: ${JSON.stringify(data)}`);
           setRegistrations([]);
         }
@@ -82,50 +65,7 @@ export default function ParticipantCourses() {
     };
     
     fetchRegistrations();
-  }, [useDummyData]);
-  
-  // Function to set dummy data
-  const setDummyData = () => {
-    console.log('Using dummy data');
-    setRegistrations([
-      {
-        id: 'reg_1',
-        courseId: 'course_1',
-        courseName: 'AIoT (Artificial Intelligence of Things)',
-        className: 'Jakarta - Jan 25',
-        schedule: '25 Jan 2024 - 28 Jan 2024',
-        registrationDate: '2024-01-10',
-        amount: 1500000,
-        status: 'Unpaid'
-      },
-      {
-        id: 'reg_2',
-        courseId: 'course_2',
-        courseName: 'Full Stack Web Development',
-        className: 'Online - Feb 5',
-        schedule: '5 Feb 2024 - 10 Feb 2024',
-        registrationDate: '2024-01-15',
-        amount: 1200000,
-        status: 'Paid'
-      },
-      {
-        id: 'reg_3',
-        courseId: 'course_3',
-        courseName: 'Data Science Fundamentals',
-        className: 'Bandung - Mar 15',
-        schedule: '15 Mar 2024 - 20 Mar 2024',
-        registrationDate: '2024-02-01',
-        amount: 1800000,
-        status: 'Unpaid'
-      }
-    ]);
-    setDebugInfo(prev => `${prev || ''}\nMenampilkan data contoh untuk demonstrasi`);
-  };
-  
-  // Toggle dummy data function
-  const toggleDummyData = () => {
-    setUseDummyData(!useDummyData);
-  };
+  }, []);
   
   if (loading) {
     return (
@@ -144,12 +84,6 @@ export default function ParticipantCourses() {
       <div className="p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl md:text-2xl font-semibold text-gray-800">Kursus Terdaftar</h1>
-          <button 
-            onClick={toggleDummyData}
-            className="px-3 py-1.5 bg-gray-200 text-gray-800 text-sm rounded hover:bg-gray-300"
-          >
-            {useDummyData ? 'Gunakan API Data' : 'Tampilkan Contoh'}
-          </button>
         </div>
         
         {error && (
@@ -198,12 +132,6 @@ export default function ParticipantCourses() {
               <Link href="/participant/my-course" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                 Jelajahi Kursus
               </Link>
-              <button
-                onClick={() => setUseDummyData(true)}
-                className="px-4 py-2 text-sm text-blue-600 hover:underline"
-              >
-                Tampilkan Data Contoh
-              </button>
             </div>
           </div>
         ) : (

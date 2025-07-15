@@ -532,13 +532,10 @@ export default function ProfilePage() {
           localStorage.setItem("hasProfile", "true");
         }
 
-        // Redirect logic
+        // Selalu arahkan pengguna ke halaman login setelah mengisi data diri
         setTimeout(() => {
-          if (!isInstructor && userRole?.toLowerCase().includes("participant")) {
-            signOut({ callbackUrl: "/auth/login" });
-          } else {
-            window.location.reload();
-          }
+          // Redirect ke halaman login (untuk semua jenis user)
+          signOut({ callbackUrl: "/login" });
         }, 1200);
       } else {
         setMessage({

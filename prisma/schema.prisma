@@ -35,9 +35,9 @@ model Class {
   room               String
   courseId           String
   course             Course               @relation(fields: [courseId], references: [id], map: "Class_courseId_fkey")
+  materials          CourseMaterial[]
   courseregistration CourseRegistration[]
   instructureclass   InstructureClass[]
-  materials          CourseMaterial[]
 
   @@index([courseId], map: "Class_courseId_fkey")
   @@map("class")
@@ -67,12 +67,12 @@ model CourseRegistration {
   present_day    Int
   classId        String
   participantId  String
+  attendance     Attendance[]
   certification  Certification[]
   class          Class           @relation(fields: [classId], references: [id], map: "CourseRegistration_classId_fkey")
   participant    Participant     @relation(fields: [participantId], references: [id], map: "CourseRegistration_participantId_fkey")
   payments       Payment[]
   valuereport    ValueReport[]
-  attendance     Attendance[]
 
   @@index([classId], map: "CourseRegistration_classId_fkey")
   @@index([participantId], map: "CourseRegistration_participantId_fkey")
@@ -94,10 +94,10 @@ model Instructure {
   phone_number     String
   address          String
   profiency        String
+  certificates     Certificate[]      @relation("Certificate_instructureId_fkey")
   instructureclass InstructureClass[]
   user             User[]
   valuereport      ValueReport[]
-  certificates     Certificate[]      @relation("Certificate_instructureId_fkey")
 
   @@map("instructure")
 }
@@ -134,18 +134,18 @@ model Participant {
 }
 
 model User {
-  id            String        @id
-  email         String        @unique(map: "User_email_key")
-  password      String
-  instructureId String?
-  last_login    DateTime?
-  token         String?
-  userTypeId    String
-  username      String        @unique(map: "User_username_key")
-  participant   Participant[]
-  instructure   Instructure?  @relation(fields: [instructureId], references: [id], map: "User_instructureId_fkey")
-  userType      UserType      @relation(fields: [userTypeId], references: [id], map: "User_userTypeId_fkey")
-  passwordResetToken PasswordResetToken[]
+  id                 String              @id
+  email              String              @unique(map: "User_email_key")
+  password           String
+  instructureId      String?
+  last_login         DateTime?
+  token              String?
+  userTypeId         String
+  username           String              @unique(map: "User_username_key")
+  participant        Participant[]
+  passwordResetToken PasswordResetToken?
+  instructure        Instructure?        @relation(fields: [instructureId], references: [id], map: "User_instructureId_fkey")
+  userType           UserType            @relation(fields: [userTypeId], references: [id], map: "User_userTypeId_fkey")
 
   @@index([instructureId], map: "User_instructureId_fkey")
   @@index([userTypeId], map: "User_userTypeId_fkey")
@@ -185,15 +185,15 @@ model Certificate {
   expiryDate        DateTime
   status            String       @default("Valid")
   participantId     String?
-  instructureId     String?
   courseId          String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   pdfUrl            String?
   driveLink         String?
+  instructureId     String?
   course            Course?      @relation(fields: [courseId], references: [id], map: "Certificate_courseId_fkey")
+  instructure       Instructure? @relation("Certificate_instructureId_fkey", fields: [instructureId], references: [id], map: "Certificate_instructureId_fkey")
   participant       Participant? @relation(fields: [participantId], references: [id], map: "Certificate_participantId_fkey")
-  instructure       Instructure? @relation(fields: [instructureId], references: [id], map: "Certificate_instructureId_fkey", name: "Certificate_instructureId_fkey")
 
   @@index([courseId], map: "Certificate_courseId_fkey")
   @@index([participantId], map: "Certificate_participantId_fkey")
@@ -241,32 +241,31 @@ model SystemSetting {
 }
 
 model CourseMaterial {
-  id             String   @id @default(uuid())
-  title          String
-  description    String?  @db.Text
-  fileUrl        String
-  day            Int
-  size           Int?
-  isGoogleDrive  Boolean  @default(false)
+  id               String   @id @default(uuid())
+  title            String
+  description      String?  @db.Text
+  fileUrl          String
+  day              Int
+  size             Int?
+  isGoogleDrive    Boolean  @default(false)
   courseScheduleId String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  class          Class    @relation(fields: [courseScheduleId], references: [id], map: "CourseMaterial_courseScheduleId_fkey")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  class            Class    @relation(fields: [courseScheduleId], references: [id], map: "CourseMaterial_courseScheduleId_fkey")
 
   @@index([courseScheduleId], map: "CourseMaterial_courseScheduleId_fkey")
   @@map("coursematerial")
 }
 
 model Attendance {
-  id             String   @id @default(uuid())
+  id             String             @id @default(uuid())
   registrationId String
-  date           DateTime @default(now())
-  status         String   // "present" atau "absent"
-  mode           String   // "online" atau "offline"
-  createdBy      String?  // id admin/instructure yang mengabsen (opsional)
+  date           DateTime           @default(now())
+  status         String
+  mode           String
+  createdBy      String?
   registration   CourseRegistration @relation(fields: [registrationId], references: [id])
-  
+
   @@index([registrationId])
   @@map("attendance")
 }
@@ -275,9 +274,9 @@ model PasswordResetToken {
   id        String   @id @default(uuid())
   token     String   @unique
   userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expires   DateTime
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("password_reset_token")
 }

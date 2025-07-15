@@ -61,6 +61,27 @@ const DashboardPage = () => {
       setLoading(true);
       setError(null);
       try {
+        // Ensure we preserve auth state on refresh
+        const preserveParticipantAuth = () => {
+          // Mark this as participant session in localStorage
+          if (typeof window !== 'undefined') {
+            // Set a timestamp to indicate active participant session
+            localStorage.setItem('participant_login_timestamp', Date.now().toString());
+            
+            // If we have session info, store it
+            const userEmail = localStorage.getItem('userEmail');
+            if (userEmail) {
+              localStorage.setItem('participant_email', userEmail);
+            }
+            
+            // Store userType to prevent logout on refresh
+            localStorage.setItem('userType', 'participant');
+          }
+        };
+        
+        // Try to preserve auth state when dashboard loads
+        preserveParticipantAuth();
+        
         // Try to get email from localStorage for demo purposes
         const userEmail = localStorage.getItem('userEmail');
         const queryParam = userEmail ? `?email=${encodeURIComponent(userEmail)}` : '';
@@ -87,6 +108,9 @@ const DashboardPage = () => {
           setStats(data.data.stats || []);
           setNotifications(data.data.notifications || []);
           setIsDbConfigured(true);
+          
+          // After successful data fetch, ensure auth state is preserved again
+          preserveParticipantAuth();
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);

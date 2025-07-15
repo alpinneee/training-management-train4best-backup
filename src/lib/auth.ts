@@ -152,29 +152,38 @@ export const authOptions: NextAuthOptions = {
   // Make sure cookies work properly for your environment
   cookies: {
     sessionToken: {
-      name: 'next-auth.session-token',
+      name: process.env.NODE_ENV === 'production' 
+        ? '__Secure-next-auth.session-token' 
+        : 'next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false, // Allow non-HTTPS for local development
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60, // 24 hours
       }
     },
     callbackUrl: {
-      name: 'next-auth.callback-url',
+      name: process.env.NODE_ENV === 'production' 
+        ? '__Secure-next-auth.callback-url' 
+        : 'next-auth.callback-url',
       options: {
         sameSite: 'lax',
         path: '/',
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60, // 24 hours
       }
     },
     csrfToken: {
-      name: 'next-auth.csrf-token',
+      name: process.env.NODE_ENV === 'production' 
+        ? '__Secure-next-auth.csrf-token' 
+        : 'next-auth.csrf-token',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60, // 24 hours
       }
     }
   }

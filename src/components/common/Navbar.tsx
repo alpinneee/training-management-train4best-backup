@@ -22,12 +22,12 @@ const Navbar: FC<NavbarProps> = ({ onMobileMenuClick }) => {
   });
 
   useEffect(() => {
-    // Fungsi untuk mendapatkan data pengguna dari berbagai sumber
+    // Function to get user data from various sources
     const getUserData = async () => {
       console.log("Getting user data, session status:", status);
       console.log("Session data:", session);
       
-      // 1. Coba dari session (next-auth)
+      // 1. Try from session (next-auth) - primary authentication source
       if (session?.user) {
         console.log("Using data from session:", session.user);
         setUserData({
@@ -37,74 +37,48 @@ const Navbar: FC<NavbarProps> = ({ onMobileMenuClick }) => {
         });
         return;
       }
-
-      // 2. Coba dari localStorage untuk participant
-      const userEmail = localStorage.getItem("userEmail");
-      const username = localStorage.getItem("username");
       
-      if (username && userEmail) {
-        console.log("Using data from localStorage participant:", { username, userEmail });
-        setUserData({
-          name: username,
-          role: "Participant",
-          email: userEmail
-        });
-        return;
-      }
-      
-      // 3. Coba dari localStorage (untuk admin)
-      const adminEmail = localStorage.getItem("admin_email");
-      const adminTimestamp = localStorage.getItem("admin_login_timestamp");
-      if (adminEmail && adminTimestamp) {
-        console.log("Using data from localStorage admin:", { adminEmail, adminTimestamp });
-        setUserData({
-          name: adminEmail.split('@')[0] || "Admin",
-          role: "Admin",
-          email: adminEmail
-        });
-        return;
-      }
-
-      // 4. Coba dari API
-      try {
-        console.log("Fetching user data from API");
-        const response = await fetch('/api/auth/session-check');
-        const data = await response.json();
-        console.log("API response:", data);
-        
-        if (data.valid && data.user) {
-          console.log("Using data from API:", data.user);
-          setUserData({
-            name: data.user.name || "User",
-            role: data.user.userType || "User",
-            email: data.user.email || ""
-          });
-          return;
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-
-      // 5. Try to get user info from API using stored email
-      if (userEmail) {
+      // 2. If session not available but loading, wait and try API
+      if (status === "loading") {
         try {
-          const response = await fetch(`/api/user/info?email=${encodeURIComponent(userEmail)}`);
+          console.log("Fetching user data from API");
+          const response = await fetch('/api/auth/session-check');
+          const data = await response.json();
+          console.log("API response:", data);
+          
+          if (data.isAuthenticated) {
+            console.log("Using data from API:", data);
+            setUserData({
+              name: data.name || "User",
+              role: data.userType || "User",
+              email: data.email || ""
+            });
+            return;
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+
+      // 3. Use cookies as fallback
+      const userEmailFromCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('userEmail='))
+        ?.split('=')[1];
+        
+      if (userEmailFromCookie) {
+        try {
+          const response = await fetch(`/api/user/info?email=${encodeURIComponent(userEmailFromCookie)}`);
           const data = await response.json();
           
           if (data && data.username) {
             console.log("Using data from user info API:", data);
             
-            // Cek apakah ini admin berdasarkan email atau data lainnya
-            const isAdmin = localStorage.getItem("admin_email") === userEmail;
-            
             setUserData({
               name: data.username,
-              role: isAdmin ? "Admin" : (data.userType || "Participant"),
-              email: userEmail
+              role: data.userType || "User",
+              email: userEmailFromCookie
             });
-            
-            // Save username to localStorage
-            localStorage.setItem('username', data.username);
             return;
           }
         } catch (error) {
@@ -112,7 +86,7 @@ const Navbar: FC<NavbarProps> = ({ onMobileMenuClick }) => {
         }
       }
 
-      // 6. Fallback ke nilai default jika semua gagal
+      // 4. Fallback ke nilai default jika semua gagal
       console.log("Using fallback data");
       setUserData({
         name: "User",
@@ -203,20 +177,20 @@ const Navbar: FC<NavbarProps> = ({ onMobileMenuClick }) => {
                   className="flex items-center focus:outline-none"
                 >
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
-                        {userData.name ? (
-                          <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                            {userData.name.charAt(0).toUpperCase()}
-                          </div>
-                        ) : (
-                          <Image
-                            src="/img/profile.png"
-                            alt="Default"
-                            width={20}
-                            height={20}
-                            className="object-cover"
-                          />
-                        )}
+                    {userData.name ? (
+                      <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white font-medium">
+                        {userData.name.charAt(0).toUpperCase()}
                       </div>
+                    ) : (
+                      <Image
+                        src="/img/profile.png"
+                        alt="Default"
+                        width={20}
+                        height={20}
+                        className="object-cover"
+                      />
+                    )}
+                  </div>
                 </button>
 
                 {/* Dropdown Menu */}
@@ -249,7 +223,7 @@ const Navbar: FC<NavbarProps> = ({ onMobileMenuClick }) => {
                       <span className="text-sm">Help</span>
                     </Link>
 
-                    <button 
+                    <button
                       onClick={handleLogoutClick}
                       className="flex items-center w-full px-4 py-2.5 hover:bg-indigo-600/30 text-left transition-colors"
                     >
@@ -264,8 +238,8 @@ const Navbar: FC<NavbarProps> = ({ onMobileMenuClick }) => {
       </nav>
 
       {/* Modal Logout */}
-      <LogoutModal 
-        isOpen={isLogoutModalOpen} 
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}
       />
     </>

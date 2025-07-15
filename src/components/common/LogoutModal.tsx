@@ -11,27 +11,27 @@ interface LogoutModalProps {
 const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen, onClose }) => {
   const handleLogout = async () => {
     try {
-      // Clear ALL localStorage items related to login
-      localStorage.removeItem("admin_login_timestamp");
-      localStorage.removeItem("admin_email");
-      localStorage.removeItem("instructure_login_timestamp");
-      localStorage.removeItem("instructure_email");
-      localStorage.removeItem("participant_login_timestamp");
-      localStorage.removeItem("participant_email");
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("userType");
-      localStorage.removeItem("username");
-      localStorage.removeItem("hasProfile");
-      // Atau gunakan localStorage.clear() jika ingin hapus semua
-      // localStorage.clear();
-      // Call our custom logout endpoint first to clear all cookies
-      await fetch('/api/auth/logout');
-      // Then use NextAuth signOut with redirect: false untuk mencegah halaman signout default
-      await signOut({ redirect: false });
-      // Redirect manual ke halaman login
+      // Call our custom logout endpoint first to clear all authentication cookies
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      // Then use NextAuth signOut
+      await signOut({ 
+        redirect: false, 
+        callbackUrl: '/login'
+      });
+      
+      // Redirect to login page
       window.location.href = '/login';
     } catch (error) {
       console.error("Logout error:", error);
+      // Fallback to direct redirect if error
+      window.location.href = '/login';
     }
   };
 

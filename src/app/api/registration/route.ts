@@ -76,49 +76,16 @@ export async function GET(req: Request) {
         };
       });
       
-      // Jika tidak ada data tersedia, kembalikan data dummy untuk testing
+      // Jika tidak ada data tersedia, kembalikan data kosong
       if (formattedRegistrations.length === 0) {
-        const dummyRegistrations = [
-          {
-            id: 'reg_1',
-            courseId: 'course_1',
-            courseName: 'AIoT (Artificial Intelligence of Things)',
-            className: 'Jakarta - Jan 25',
-            schedule: '25 Jan 2024 - 28 Jan 2024',
-            registrationDate: '2024-01-10',
-            amount: 1500000,
-            status: 'Unpaid'
-          },
-          {
-            id: 'reg_2',
-            courseId: 'course_2',
-            courseName: 'Full Stack Web Development',
-            className: 'Online - Feb 5',
-            schedule: '5 Feb 2024 - 10 Feb 2024',
-            registrationDate: '2024-01-15',
-            amount: 1200000,
-            status: 'Paid'
-          },
-          {
-            id: 'reg_3',
-            courseId: 'course_3',
-            courseName: 'Data Science Fundamentals',
-            className: 'Bandung - Mar 15',
-            schedule: '15 Mar 2024 - 20 Mar 2024',
-            registrationDate: '2024-02-01',
-            amount: 1800000,
-            status: 'Unpaid'
-          }
-        ];
-        
         return NextResponse.json({
-          data: dummyRegistrations,
+          data: [],
           meta: {
-            total: dummyRegistrations.length,
+            total: 0,
             page,
             limit,
-            totalPages: 1,
-            message: "Menampilkan data dummy karena tidak ada registrasi yang ditemukan"
+            totalPages: 0,
+            message: "Tidak ada registrasi yang ditemukan"
           }
         });
       }
@@ -140,41 +107,18 @@ export async function GET(req: Request) {
     } catch (dbError) {
       console.error("Database error:", dbError);
       
-      // Jika terjadi error database, kembalikan data dummy
-      const dummyRegistrations = [
-        {
-          id: 'reg_1',
-          courseId: 'course_1',
-          courseName: 'AIoT (Artificial Intelligence of Things)',
-          className: 'Jakarta - Jan 25',
-          schedule: '25 Jan 2024 - 28 Jan 2024',
-          registrationDate: '2024-01-10',
-          amount: 1500000,
-          status: 'Unpaid'
-        },
-        {
-          id: 'reg_2',
-          courseId: 'course_2',
-          courseName: 'Full Stack Web Development',
-          className: 'Online - Feb 5',
-          schedule: '5 Feb 2024 - 10 Feb 2024',
-          registrationDate: '2024-01-15',
-          amount: 1200000,
-          status: 'Paid'
-        }
-      ];
-      
+      // Return error with empty data
       return NextResponse.json({
-        data: dummyRegistrations,
+        data: [],
         meta: {
-          total: dummyRegistrations.length,
+          total: 0,
           page,
           limit,
-          totalPages: 1,
-          error: "Database error, menggunakan data dummy",
+          totalPages: 0,
+          error: "Database error",
           details: dbError instanceof Error ? dbError.message : "Unknown error"
         }
-      });
+      }, { status: 500 });
     }
   } catch (error) {
     console.error("Fatal error fetching registrations:", error);

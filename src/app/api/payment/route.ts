@@ -304,9 +304,8 @@ export async function GET(request: Request) {
       const hasFilters = search || paymentMethod || startDate || endDate || (status && status !== 'All');
       
       if (!hasFilters) {
-        // Only return mock data if no filters are applied
-        console.log("No payments found and no filters applied, returning mock data");
-        return NextResponse.json(getMockPayments());
+        // Return empty result instead of mock data
+        console.log("No payments found and no filters applied, returning empty result");
       } else {
         console.log("No payments found with applied filters, returning empty result");
       }
@@ -320,11 +319,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Error fetching payments:", error);
     
-    // If in development, return mock data on error
-    if (process.env.NODE_ENV === 'development') {
-      console.log("Error in development, returning mock data");
-      return NextResponse.json(getMockPayments());
-    }
+   
     
     return NextResponse.json(
       { error: "Failed to fetch payments" },
@@ -367,79 +362,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
-// Mock data for development
-function getMockPayments() {
-  const mockData = [
-    {
-      id: "mock-1",
-      no: 1,
-      nama: "Ilham Ramadhan",
-      tanggal: "2024-01-02",
-      paymentMethod: "Transfer Bank",
-      nomorReferensi: "TRF-20240102-001",
-      jumlah: "Rp1.000.000",
-      amount: 1000000,
-      status: "Paid",
-      registrationId: "mock-reg-1",
-      paymentProof: "/uploads/payment-proofs/sample-receipt.jpg"
-    },
-    {
-      id: "mock-2",
-      no: 2,
-      nama: "Risky Febriana",
-      tanggal: "2024-01-10",
-      paymentMethod: "E-Wallet",
-      nomorReferensi: "EWL-20240110-001",
-      jumlah: "Rp 1.000.000",
-      amount: 1000000,
-      status: "Unpaid",
-      registrationId: "mock-reg-2",
-      paymentProof: null
-    },
-    {
-      id: "mock-3",
-      no: 3,
-      nama: "Affine Makarizo",
-      tanggal: "2024-01-05",
-      paymentMethod: "Kartu Kredit",
-      nomorReferensi: "CC-20240105-002",
-      jumlah: "Rp 1.500.000",
-      amount: 1500000,
-      status: "Pending",
-      registrationId: "mock-reg-3",
-      paymentProof: "/uploads/payment-proofs/sample-receipt-2.jpg"
-    },
-    {
-      id: "mock-4",
-      no: 4,
-      nama: "Dimas Prayoga",
-      tanggal: "2024-01-15",
-      paymentMethod: "Transfer Bank",
-      nomorReferensi: "TRF-20240115-001",
-      jumlah: "Rp 2.000.000",
-      amount: 2000000,
-      status: "Paid",
-      registrationId: "mock-reg-4",
-      paymentProof: "/uploads/payment-proofs/sample-receipt-3.jpg"
-    },
-    {
-      id: "mock-5",
-      no: 5,
-      nama: "Siti Nurhaliza",
-      tanggal: "2024-01-20",
-      paymentMethod: "E-Wallet",
-      nomorReferensi: "EWL-20240120-001",
-      jumlah: "Rp 1.500.000",
-      amount: 1500000,
-      status: "Rejected",
-      registrationId: "mock-reg-5",
-      paymentProof: "/uploads/payment-proofs/sample-receipt-4.jpg"
-    }
-  ];
-  
-  return {
-    data: mockData,
-    total: mockData.length
-  };
-} 

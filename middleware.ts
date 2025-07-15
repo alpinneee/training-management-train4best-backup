@@ -7,11 +7,25 @@ import type { NextRequest } from 'next/server'
 // Fungsi untuk logging
 console.log('=== MIDDLEWARE MASUK ===');
 function logDebug(message: string, data?: any) {
-  console.log(`[MIDDLEWARE] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[MIDDLEWARE] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  }
 }
 
 // Daftar rute publik yang tidak memerlukan autentikasi
-
+const publicRoutes = [
+  '/',
+  '/login',
+  '/register',
+  '/reset-password',
+  '/about',
+  '/contact',
+  '/profile',
+  '/api',
+  '/_next',
+  '/favicon.ico',
+  '/img'
+];
 
 // Rute yang hanya bisa diakses admin
 const adminRoutes = [
@@ -46,38 +60,16 @@ const participantRoutes = [
 ];
 
 export default async function middleware(request: NextRequest) {
-  // Handle special headers for localStorage
-  const userEmail = request.headers.get('X-User-Email');
-  const userName = request.headers.get('X-User-Name');
+  const path = request.nextUrl.pathname;
+  
+  // Skip auth check for public routes
+  if (publicRoutes.some(route => path === route || path.startsWith(route + '/'))) {
+    return NextResponse.next();
+  }
+
   const response = NextResponse.next();
   
-  if (userEmail) {
-    response.cookies.set('userEmail', userEmail, {
-      maxAge: 60 * 60 * 24, // 1 day
-      path: '/',
-    });
-  }
-  
-  if (userName) {
-    response.cookies.set('userName', userName, {
-      maxAge: 60 * 60 * 24, // 1 day
-      path: '/',
-    });
-  }
-
-  // Skip auth check for routes that only need header processing
-  if (request.nextUrl.pathname.startsWith('/api') || 
-      request.nextUrl.pathname.startsWith('/_next') ||
-      request.nextUrl.pathname.startsWith('/favicon.ico') ||
-      request.nextUrl.pathname.startsWith('/img')) {
-    return response;
-  }
-
-  const path = request.nextUrl.pathname;
   logDebug(`Middleware dipanggil untuk path: ${path}`);
-
-  // Izinkan akses ke rute publik tanpa autentikasi
-
 
   try {
     // Cek apakah ini adalah percobaan login berulang untuk mencegah loop
@@ -88,92 +80,108 @@ export default async function middleware(request: NextRequest) {
       return response;
     }
 
-    // Cek token dari berbagai sumber
-    const adminToken = request.cookies.get("admin_token")?.value;
-    const dashboardToken = request.cookies.get("dashboard_token")?.value;
-    const debugToken = request.cookies.get("debug_token")?.value;
-    const participantToken = request.cookies.get("participant_token")?.value;
-    
-    // Coba verifikasi token
+    // Get NEXTAUTH_SECRET for JWT verification
     const secret = process.env.NEXTAUTH_SECRET || "ee242735312254106fe3e96a49c7439e224a303ff71c148eee211ee52b6df1719d261fbf28697c6375bfa1ff473b328d31659d6308da93ea03ae630421a8024e";
-    let userType = null;
-    let userId = null;
-    let userEmail = null;
-
-    // Cek semua token yang tersedia
-    if (adminToken) {
-      try {
-        const decoded = jwt.verify(adminToken, secret) as jwt.JwtPayload;
-        if (decoded) {
-          logDebug(`Admin token valid`);
-          userType = "Admin";
-          userId = decoded.id;
-          userEmail = decoded.email;
+    
+    // Prioritize NextAuth session token
+    const token = await getToken({ 
+      req: request,
+      secret: secret
+    });
+    
+    let userType = token?.userType as string;
+    let userId = token?.id as string;
+    let userEmail = token?.email as string;
+    
+    // If no NextAuth token, try other tokens with fallback
+    if (!token) {
+      logDebug("No NextAuth token found, checking other tokens");
+      
+      // Define cookie options for secure settings
+      const secureCookieOptions = {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60, // 24 hours
+        path: '/'
+      };
+      
+      // For the participant routes, try to use any available token
+      const isParticipantRoute = participantRoutes.some(route => 
+        path === route || path.startsWith(route + '/'));
+      
+      // Check all alternative tokens
+      const participantToken = request.cookies.get("participant_token")?.value;
+      const adminToken = request.cookies.get("admin_token")?.value;
+      const dashboardToken = request.cookies.get("dashboard_token")?.value;
+      
+      if (participantToken) {
+        try {
+          const decoded = jwt.verify(participantToken, secret) as jwt.JwtPayload;
+          if (decoded) {
+            logDebug(`Participant token valid`);
+            userType = "Participant";
+            userId = decoded.id as string;
+            userEmail = decoded.email as string;
+            
+            // Set participant token with secure settings
+            response.cookies.set("participant_token", participantToken, secureCookieOptions);
+          }
+        } catch (error) {
+          logDebug(`Participant token invalid: ${(error as Error).message}`);
+          // Clear invalid token
+          response.cookies.set("participant_token", "", { maxAge: 0 });
         }
-      } catch (error) {
-        logDebug(`Admin token invalid: ${(error as Error).message}`);
+      }
+      
+      if (!userType && adminToken) {
+        try {
+          const decoded = jwt.verify(adminToken, secret) as jwt.JwtPayload;
+          if (decoded) {
+            logDebug(`Admin token valid`);
+            userType = "Admin";
+            userId = decoded.id as string;
+            userEmail = decoded.email as string;
+            
+            // Set admin token with secure settings
+            response.cookies.set("admin_token", adminToken, secureCookieOptions);
+          }
+        } catch (error) {
+          logDebug(`Admin token invalid: ${(error as Error).message}`);
+          // Clear invalid token
+          response.cookies.set("admin_token", "", { maxAge: 0 });
+        }
+      }
+      
+      if (!userType && dashboardToken) {
+        try {
+          const decoded = jwt.verify(dashboardToken, secret) as jwt.JwtPayload;
+          if (decoded) {
+            logDebug(`Dashboard token valid`);
+            userType = decoded.userType as string;
+            userId = decoded.id as string;
+            userEmail = decoded.email as string;
+            
+            // Set dashboard token with secure settings
+            response.cookies.set("dashboard_token", dashboardToken, secureCookieOptions);
+          }
+        } catch (error) {
+          logDebug(`Dashboard token invalid: ${(error as Error).message}`);
+          // Clear invalid token
+          response.cookies.set("dashboard_token", "", { maxAge: 0 });
+        }
       }
     }
 
-    // Check participant token if no admin token found
-    if (!userType && participantToken) {
-      try {
-        const decoded = jwt.verify(participantToken, secret) as jwt.JwtPayload;
-        if (decoded) {
-          logDebug(`Participant token valid`);
-          userType = "Participant";
-          userId = decoded.id;
-          userEmail = decoded.email;
-        }
-      } catch (error) {
-        logDebug(`Participant token invalid: ${(error as Error).message}`);
-      }
-    }
-
-    if (!userType && dashboardToken) {
-      try {
-        const decoded = jwt.verify(dashboardToken, secret) as jwt.JwtPayload;
-        if (decoded) {
-          logDebug(`Dashboard token valid`);
-          userType = decoded.userType;
-          userId = decoded.id;
-          userEmail = decoded.email;
-        }
-      } catch (error) {
-        logDebug(`Dashboard token invalid: ${(error as Error).message}`);
-      }
-    }
-
-    if (!userType && debugToken) {
-      try {
-        const decoded = jwt.verify(debugToken, secret) as jwt.JwtPayload;
-        if (decoded) {
-          logDebug(`Debug token valid`);
-          userType = decoded.userType;
-          userId = decoded.id;
-          userEmail = decoded.email;
-        }
-      } catch (error) {
-        logDebug(`Debug token invalid: ${(error as Error).message}`);
-      }
-    }
-
-    if (!userType) {
-      try {
-        const token = await getToken({ 
-          req: request,
-          secret: secret
-        });
-        
-        if (token) {
-          logDebug(`NextAuth token valid`);
-          userType = token.userType as string;
-          userId = token.id as string;
-          userEmail = token.email as string;
-        }
-      } catch (error) {
-        logDebug(`Error saat verifikasi NextAuth token: ${(error as Error).message}`);
-      }
+    // If we have a user email and name, set cookies but ensure they're secure
+    if (userEmail) {
+      response.cookies.set('userEmail', userEmail, {
+        maxAge: 60 * 60 * 24, // 1 day
+        path: '/',
+        httpOnly: true, // Make it httpOnly for security
+        secure: process.env.NODE_ENV === 'production', // Only secure in production
+        sameSite: 'lax',
+      });
     }
 
     // Jika tidak ada token valid, redirect ke login
@@ -204,8 +212,8 @@ export default async function middleware(request: NextRequest) {
         logDebug(`Instructor mengakses rute instructor: ${path}, akses diizinkan`);
         return response;
       } else {
-        logDebug(`Instructor mencoba akses non-instructor route: ${path}, redirect ke /instructure-dashboard`);
-        return NextResponse.redirect(new URL('/instructure-dashboard', request.url));
+        logDebug(`Instructor mencoba akses non-instructor route: ${path}, redirect ke /instructure/dashboard`);
+        return NextResponse.redirect(new URL('/instructure/dashboard', request.url));
       }
     } else if (userTypeLower === 'participant') {
       // Participant hanya dapat mengakses rute participant
@@ -213,16 +221,16 @@ export default async function middleware(request: NextRequest) {
         logDebug(`Participant mengakses rute participant: ${path}, akses diizinkan`);
         return response;
       } else {
-        logDebug(`Participant mencoba akses non-participant route: ${path}, redirect ke /participant-dashboard`);
-        return NextResponse.redirect(new URL('/participant-dashboard', request.url));
+        logDebug(`Participant mencoba akses non-participant route: ${path}, redirect ke /participant/dashboard`);
+        return NextResponse.redirect(new URL('/participant/dashboard', request.url));
       }
     }
 
     // Jika tidak memiliki akses yang sesuai, redirect ke dashboard berdasarkan userType
-    let redirectPath = '/dashboard-static';
+    let redirectPath = '/login';
     if (userTypeLower === 'admin') redirectPath = '/dashboard';
-    if (userTypeLower === 'instructure') redirectPath = '/instructure-dashboard';
-    if (userTypeLower === 'participant') redirectPath = '/participant-dashboard';
+    if (userTypeLower === 'instructure') redirectPath = '/instructure/dashboard';
+    if (userTypeLower === 'participant') redirectPath = '/participant/dashboard';
     if (userTypeLower === 'unassigned') redirectPath = '/profile';
 
     logDebug(`User ${userTypeLower} tidak memiliki akses ke ${path}, redirect ke ${redirectPath}`);

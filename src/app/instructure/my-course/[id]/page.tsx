@@ -500,8 +500,9 @@ const CourseScheduleDetail = () => {
       setAllInstructors(instructors);
     } catch (error) {
       console.error("Error fetching instructors:", error);
-      // Set dummy data in case of error
+      // Return empty array in case of error
       setAllInstructors([]);
+      toast.error("Gagal memuat data instruktur");
     }
   };
 

@@ -19,29 +19,6 @@ export async function GET(request: Request, { params }: Params) {
       );
     }
 
-    // Handle mock IDs for development
-    if ((id.startsWith('mock-') || id.startsWith('demo-')) && process.env.NODE_ENV !== 'production') {
-      console.log(`Returning mock data for payment ID: ${id}`);
-      
-      // Generate mock data based on the ID
-      const mockNumber = parseInt(id.replace(/\D/g, '') || '1');
-      const mockData = {
-        id: id,
-        paymentDate: new Date().toISOString(),
-        amount: 1000000 + (mockNumber * 500000),
-        paymentMethod: ["Transfer Bank", "E-Wallet", "Kartu Kredit"][mockNumber % 3],
-        referenceNumber: `REF-MOCK-${mockNumber.toString().padStart(4, '0')}`,
-        status: ["Paid", "Unpaid", "Pending"][mockNumber % 3],
-        registrationId: `mock-reg-${mockNumber}`,
-        participantName: ["John Doe", "Jane Smith", "Bob Johnson"][mockNumber % 3],
-        courseName: ["Leadership Training", "Digital Marketing", "Project Management"][mockNumber % 3],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      return NextResponse.json(mockData);
-    }
-    
     console.log(`Fetching payment with ID: ${id}`);
 
     // First try to find by payment ID
@@ -230,29 +207,6 @@ export async function PUT(request: Request, { params }: Params) {
     }
 
     console.log(`Processing PUT request for payment ID: ${id}`, body);
-    
-    // Handle mock IDs for development
-    if ((id.startsWith('mock-') || id.startsWith('demo-')) && process.env.NODE_ENV !== 'production') {
-      console.log(`Processing mock payment update for ID: ${id}`);
-      
-      // Return success response for mock data
-      const mockData = {
-        id: id,
-        paymentDate: paymentDate ? new Date(paymentDate).toISOString() : new Date().toISOString(),
-        amount: amount !== undefined ? parseFloat(amount.toString()) : 1000000,
-        paymentMethod: paymentMethod || "Transfer Bank",
-        referenceNumber: referenceNumber || `REF-MOCK-UPDATED`,
-        status: status || "Paid",
-        registrationId: `mock-reg-1`,
-        updatedAt: new Date().toISOString(),
-      };
-      
-      return NextResponse.json({
-        success: true,
-        message: "Mock payment updated successfully",
-        payment: mockData
-      });
-    }
     
     // Check if payment exists
     const payment = await prisma.payment.findUnique({

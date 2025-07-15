@@ -25,6 +25,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const showNotification = (message: string, type: NotificationType) => {
     setNotification({ message, type, isVisible: true });
+    
     // Auto hide after 3 seconds
     setTimeout(() => {
       hideNotification();
@@ -35,8 +36,14 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotification(null);
   };
 
+  const value = {
+    showNotification,
+    hideNotification,
+    notification
+  };
+
   return (
-    <NotificationContext.Provider value={{ showNotification, hideNotification, notification }}>
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );

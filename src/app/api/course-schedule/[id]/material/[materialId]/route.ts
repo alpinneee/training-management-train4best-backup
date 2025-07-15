@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { prisma } from "@/lib/prisma";
 
 // Get a specific material
 export async function GET(
@@ -20,19 +21,30 @@ export async function GET(
     
     console.log(`Fetching material ${materialId} for course ${courseId}`);
     
-    // Return mock data for now
-    const mockMaterial = {
-      id: materialId,
-      title: "Mock Material",
-      description: "This is a mock material for development",
-      fileUrl: "https://drive.google.com/file/d/example",
-      day: 1,
-      courseScheduleId: courseId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    return NextResponse.json(mockMaterial);
+    // Fetch from database
+    try {
+      const material = await prisma.courseMaterial.findUnique({
+        where: { 
+          id: materialId,
+          courseScheduleId: courseId
+        }
+      });
+      
+      if (!material) {
+        return NextResponse.json(
+          { error: "Material not found" },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json(material);
+    } catch (dbError) {
+      console.error("Database error fetching material:", dbError);
+      return NextResponse.json(
+        { error: "Database error fetching material" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Error fetching material:", error);
     return NextResponse.json(
@@ -71,21 +83,29 @@ export async function PUT(
       );
     }
     
-    // In production, you would update the database
-    // For now, return updated mock data
-    
-    const updatedMaterial = {
-      id: materialId,
-      title: data.title,
-      description: data.description || "",
-      fileUrl: data.fileUrl || "",
-      day: parseInt(data.day),
-      courseScheduleId: courseId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    return NextResponse.json(updatedMaterial);
+    // Update in database
+    try {
+      const updatedMaterial = await prisma.courseMaterial.update({
+        where: {
+          id: materialId,
+          courseScheduleId: courseId
+        },
+        data: {
+          title: data.title,
+          description: data.description || "",
+          fileUrl: data.fileUrl || "",
+          day: parseInt(data.day)
+        }
+      });
+      
+      return NextResponse.json(updatedMaterial);
+    } catch (dbError) {
+      console.error("Database error updating material:", dbError);
+      return NextResponse.json(
+        { error: "Database error updating material" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Error updating material:", error);
     return NextResponse.json(
@@ -113,10 +133,23 @@ export async function DELETE(
     
     console.log(`Deleting material ${materialId} from course ${courseId}`);
     
-    // In production, you would delete from the database
-    // For now, just return success response
-    
-    return NextResponse.json({ success: true, message: "Material deleted successfully" });
+    // Delete from database
+    try {
+      await prisma.courseMaterial.delete({
+        where: {
+          id: materialId,
+          courseScheduleId: courseId
+        }
+      });
+      
+      return NextResponse.json({ success: true, message: "Material deleted successfully" });
+    } catch (dbError) {
+      console.error("Database error deleting material:", dbError);
+      return NextResponse.json(
+        { error: "Database error deleting material" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Error deleting material:", error);
     return NextResponse.json(

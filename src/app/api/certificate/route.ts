@@ -103,48 +103,15 @@ export async function GET(req: Request) {
       
       // If no data is available, return dummy data for testing
       if (formattedCertificates.length === 0) {
-        const dummyCertificates = [
-          {
-            id: "dummy_1",
-            certificateNumber: "CERT/2023/001",
-            issueDate: new Date(),
-            courseName: "AIoT",
-            courseType: "Technical",
-            location: "Jakarta",
-            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-            endDate: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000),
-            participantName: "User Test",
-            description: [
-              "Membangun sistem AIoT",
-              "Mengembangkan aplikasi smart home, smart agriculture, smart healthcare"
-            ]
-          },
-          {
-            id: "dummy_2",
-            certificateNumber: "CERT/2023/002",
-            issueDate: new Date(),
-            courseName: "Programmer",
-            courseType: "Technical",
-            location: "Bandung",
-            startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-            endDate: new Date(Date.now() - 55 * 24 * 60 * 60 * 1000),
-            participantName: "User Test",
-            description: [
-              "Introduction (pengenalan web)",
-              "Frontend, backend"
-            ]
-          }
-        ];
-        
-        console.log("No certificates found, returning dummy data");
+        console.log("No certificates found, returning empty data");
         return NextResponse.json({
-          data: dummyCertificates,
+          data: [],
           meta: {
-            total: dummyCertificates.length,
+            total: 0,
             page,
             limit,
-            totalPages: 1,
-            message: "Menampilkan data dummy karena tidak ada sertifikat yang ditemukan"
+            totalPages: 0,
+            message: "Tidak ada sertifikat yang ditemukan"
           }
         });
       }
@@ -166,51 +133,18 @@ export async function GET(req: Request) {
     } catch (dbError) {
       console.error("Database error:", dbError);
       
-      // If there's a database error, return dummy data
-      const dummyCertificates = [
-        {
-          id: "dummy_1",
-          certificateNumber: "CERT/2023/001",
-          issueDate: new Date(),
-          courseName: "AIoT",
-          courseType: "Technical",
-          location: "Jakarta",
-          startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          endDate: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000),
-          participantName: "User Test",
-          description: [
-            "Membangun sistem AIoT",
-            "Mengembangkan aplikasi smart home, smart agriculture, smart healthcare"
-          ]
-        },
-        {
-          id: "dummy_2",
-          certificateNumber: "CERT/2023/002",
-          issueDate: new Date(),
-          courseName: "Programmer",
-          courseType: "Technical",
-          location: "Bandung",
-          startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-          endDate: new Date(Date.now() - 55 * 24 * 60 * 60 * 1000),
-          participantName: "User Test",
-          description: [
-            "Introduction (pengenalan web)",
-            "Frontend, backend"
-          ]
-        }
-      ];
-      
+      // Return error with empty data
       return NextResponse.json({
-        data: dummyCertificates,
+        data: [],
         meta: {
-          total: dummyCertificates.length,
+          total: 0,
           page,
           limit,
-          totalPages: 1,
-          error: "Database error, menggunakan data dummy",
+          totalPages: 0,
+          error: "Database error",
           details: dbError instanceof Error ? dbError.message : "Unknown error"
         }
-      });
+      }, { status: 500 });
     }
   } catch (error) {
     console.error("Fatal error fetching certificates:", error);

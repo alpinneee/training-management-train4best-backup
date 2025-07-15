@@ -3,19 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import Card from "@/components/common/card";
-import { CalendarIcon } from "@heroicons/react/24/outline";
 import { format } from "date-fns";
 
 interface CalendarProps {
-  locale: {
-    locale: string;
-    formatDay: (locale: string | undefined, date: Date) => string;
-    formatMonthYear: (locale: string | undefined, date: Date) => string;
-    formatMonth: (locale: string | undefined, date: Date) => string;
-    formatWeekday: (locale: string | undefined, date: Date) => string;
-    formatShortWeekday: (locale: string | undefined, date: Date) => string;
-  };
+  locale: string;
   upcomingTrainings: Array<{
     title: string;
     date: string;
@@ -23,9 +14,28 @@ interface CalendarProps {
   }>;
 }
 
-export function TrainingCalendar({ locale, upcomingTrainings }: CalendarProps) {
+export function TrainingCalendar({ locale = 'en-US', upcomingTrainings }: CalendarProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [trainings, setTrainings] = useState(upcomingTrainings);
+  const [value, setValue] = useState(new Date());
+  
+  // Create locale object for the calendar
+  const calendarLocale = {
+    locale: locale,
+    formatDay: (locale: string | undefined, date: Date) => date.getDate().toString(),
+    formatMonthYear: (locale: string | undefined, date: Date) => {
+      return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date);
+    },
+    formatMonth: (locale: string | undefined, date: Date) => {
+      return new Intl.DateTimeFormat(locale, { month: 'long' }).format(date);
+    },
+    formatWeekday: (locale: string | undefined, date: Date) => {
+      return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(date);
+    },
+    formatShortWeekday: (locale: string | undefined, date: Date) => {
+      return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date);
+    }
+  };
 
   // Fetch trainings from database on component mount
   useEffect(() => {
@@ -69,7 +79,7 @@ export function TrainingCalendar({ locale, upcomingTrainings }: CalendarProps) {
           trainingDate.getFullYear() === date.getFullYear()
       );
       
-      return isTrainingDay ? 'bg-blue-100 text-blue-800 rounded-full font-bold' : null;
+      return isTrainingDay ? 'bg-blue-100 text-blue-800 font-medium' : null;
     }
     return null;
   };
@@ -78,22 +88,30 @@ export function TrainingCalendar({ locale, upcomingTrainings }: CalendarProps) {
   const formatTrainingDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return format(date, 'MMM dd, yyyy');
+      return format(date, 'd MMM yyyy');
     } catch (error) {
       return dateString;
     }
   };
+  
+  // Get trainings for the selected date
+  const getTrainingsForDate = (date: Date) => {
+    return trainings.filter(training => {
+      const trainingDate = new Date(training.date);
+      return (
+        trainingDate.getDate() === date.getDate() &&
+        trainingDate.getMonth() === date.getMonth() &&
+        trainingDate.getFullYear() === date.getFullYear()
+      );
+    });
+  };
+  
+  // Trainings for selected date
+  const selectedDateTrainings = getTrainingsForDate(value);
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-bold text-gray-700 flex items-center">
-          <CalendarIcon className="w-5 h-5 mr-2 text-blue-600" />
-          Training Calendar
-        </h2>
-      </div>
-      
-      <div className="calendar-container">
+    <>
+      <div className="calendar-container mb-4">
         <style jsx global>{`
           .react-calendar {
             border: none !important;
@@ -101,87 +119,107 @@ export function TrainingCalendar({ locale, upcomingTrainings }: CalendarProps) {
             background: transparent !important;
             font-family: inherit !important;
           }
+          .react-calendar__navigation {
+            margin-bottom: 0.5em !important;
+          }
           .react-calendar__navigation button {
-            color: #3b82f6 !important;
-            font-weight: bold !important;
-            font-size: 1rem !important;
+            color: #1e40af !important;
+            font-weight: 500 !important;
+            font-size: 0.875rem !important;
+            min-width: 32px !important;
           }
           .react-calendar__month-view__weekdays__weekday {
-            font-weight: bold !important;
-            color: #4b5563 !important;
+            font-weight: 500 !important;
+            color: #6b7280 !important;
             text-decoration: none !important;
+            font-size: 0.75rem !important;
+            padding: 0.5em !important;
           }
           .react-calendar__month-view__weekdays__weekday abbr {
             text-decoration: none !important;
+            text-transform: uppercase !important;
           }
           .react-calendar__tile {
-            padding: 0.75em 0.5em !important;
-            font-size: 0.875rem !important;
+            padding: 0.5em 0.25em !important;
+            font-size: 0.75rem !important;
+            height: 2.5rem !important;
           }
           .react-calendar__tile:enabled:hover,
           .react-calendar__tile:enabled:focus {
-            background-color: #dbeafe !important;
-            border-radius: 9999px !important;
+            background-color: #eff6ff !important;
+            color: #1e40af !important;
           }
           .react-calendar__tile--active {
-            background-color: #3b82f6 !important;
+            background-color: #2563eb !important;
             color: white !important;
-            border-radius: 9999px !important;
+            font-weight: 500 !important;
           }
           .react-calendar__tile--now {
             background-color: #fef3c7 !important;
-            border-radius: 9999px !important;
+            color: #92400e !important;
+          }
+          .react-calendar__tile--now.react-calendar__tile--active {
+            background-color: #2563eb !important;
+            color: white !important;
           }
         `}</style>
         
-        <Calendar className="text-sm text-gray-700"
-          locale={locale.locale}
-          formatDay={locale.formatDay}
-          formatMonth={locale.formatMonth}
-          formatMonthYear={locale.formatMonthYear}
-          formatWeekday={locale.formatWeekday}
-          formatShortWeekday={locale.formatShortWeekday}
+        <Calendar 
+          className="text-sm text-gray-700"
+          locale={calendarLocale.locale}
+          formatDay={calendarLocale.formatDay}
+          formatMonth={calendarLocale.formatMonth}
+          formatMonthYear={calendarLocale.formatMonthYear}
+          formatWeekday={calendarLocale.formatWeekday}
+          formatShortWeekday={calendarLocale.formatShortWeekday}
           tileClassName={tileClassName}
+          onChange={setValue}
+          value={value}
+          minDetail="month"
         />
       </div>
       
-      <div className="mt-4">
-        <h3 className="font-semibold text-gray-700 mb-2 text-sm flex items-center">
-          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-          Upcoming Trainings
-        </h3>
+      <div>
+        {selectedDateTrainings.length > 0 ? (
+          <div>
+            <h3 className="text-xs font-medium text-gray-500 mb-2">
+              Trainings on {format(value, 'd MMMM yyyy')}
+            </h3>
+            <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
+              {selectedDateTrainings.map((training, index) => (
+                <div 
+                  key={index} 
+                  className="bg-white border-l-4 border-blue-500 pl-2 py-2 pr-3 rounded-sm shadow-sm"
+                >
+                  <div className="font-medium text-gray-800 text-sm">
+                    {training.title}
+                  </div>
+                  <div className="flex justify-between items-center mt-1 text-xs">
+                    <span className="text-blue-600">
+                      {formatTrainingDate(training.date)}
+                    </span>
+                    <span className="text-gray-500">
+                      {training.trainer}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gray-50 rounded-md p-3 text-center">
+            <p className="text-sm text-gray-500">
+              No trainings on {format(value, 'd MMMM yyyy')}
+            </p>
+          </div>
+        )}
         
-        {isLoading ? (
+        {isLoading && (
           <div className="flex justify-center py-4">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
           </div>
-        ) : trainings.length > 0 ? (
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-            {trainings.map((training, index) => (
-              <div 
-                key={index} 
-                className="bg-white border border-gray-100 p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="font-medium text-gray-800 text-sm">
-                  {training.title}
-                </div>
-                <div className="flex justify-between items-center mt-1 text-xs">
-                  <span className="text-blue-600 font-medium">
-                    {formatTrainingDate(training.date)}
-                  </span>
-                  <span className="text-gray-500 italic">
-                    {training.trainer}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-4 text-gray-500 text-sm">
-            No upcoming trainings scheduled
-          </div>
         )}
       </div>
-    </Card>
+    </>
   );
 } 
