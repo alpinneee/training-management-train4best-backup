@@ -44,6 +44,17 @@ export default function ProfilePage() {
   const initialEmail = typeof window !== "undefined" ? localStorage.getItem("userEmail") || "" : "";
   const initialName = typeof window !== "undefined" ? localStorage.getItem("username") || "" : "";
 
+  // Bersihkan hardcoded email jika ditemukan
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Jika ada session dan ditemukan email hardcoded di localStorage
+      if (session?.user?.email && localStorage.getItem("userEmail") === "azhartridesebrii@gmail.com") {
+        console.log("Cleaning up hardcoded email in localStorage");
+        localStorage.setItem("userEmail", session.user.email);
+      }
+    }
+  }, [session]);
+  
   // Form state
   const [isEditing, setIsEditing] = useState(true); // Selalu edit mode
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,8 +94,18 @@ export default function ProfilePage() {
     // Try to get email from various sources
     let emailToUse = emailParam;
 
+    // Prioritaskan email dari session untuk user yang login
+    if (session?.user?.email) {
+      emailToUse = session.user.email;
+      console.log("Prioritizing email from session:", emailToUse);
+      
+      // Update localStorage with correct email
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userEmail", emailToUse);
+      }
+    }
     // Check cookies first (direct login)
-    if (!emailToUse) {
+    else if (!emailToUse) {
       const getCookie = (name: string) => {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
@@ -108,20 +129,19 @@ export default function ProfilePage() {
     if (!emailToUse) {
       const userEmail = typeof window !== "undefined" ? localStorage.getItem("userEmail") : null;
       if (userEmail) {
-        emailToUse = userEmail;
-        console.log("Using email from localStorage:", emailToUse);
-      }
-    }
-
-    // Try session last
-    if (!emailToUse && session?.user?.email) {
-      emailToUse = session.user.email;
-      console.log("Using email from session:", emailToUse);
-
-      // If we have userType in session, store it in localStorage
-      if (typeof window !== "undefined" && session.user.userType) {
-        localStorage.setItem("userType", session.user.userType);
-        console.log("Stored userType in localStorage:", session.user.userType);
+        // Check if it's the hardcoded email that's causing issues
+        if (userEmail === "azhartridesebrii@gmail.com" && session?.user?.email) {
+          emailToUse = session.user.email;
+          console.log("Correcting hardcoded email in localStorage:", emailToUse);
+          
+          // Update localStorage with correct email
+          if (typeof window !== "undefined") {
+            localStorage.setItem("userEmail", emailToUse);
+          }
+        } else {
+          emailToUse = userEmail;
+          console.log("Using email from localStorage:", emailToUse);
+        }
       }
     }
 
@@ -155,6 +175,17 @@ export default function ProfilePage() {
         error: "No email found to fetch profile data",
       }));
       return;
+    }
+
+    // Hapus hardcoded email jika masih tersisa
+    if (emailToUse === "azhartridesebrii@gmail.com" && session?.user?.email) {
+      emailToUse = session.user.email;
+      console.log("Correcting hardcoded email before API call:", emailToUse);
+      
+      // Update localStorage with correct email
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userEmail", emailToUse);
+      }
     }
 
     try { 
@@ -415,14 +446,27 @@ export default function ProfilePage() {
 
     // If we have email in localStorage, use it immediately
     if (userEmail) {
-      setFormData((prev) => ({
-        ...prev,
-        email: userEmail,
-        fullName: username || prev.fullName,
-      }));
+      // Pastikan ini bukan email hardcoded yang salah
+      if (userEmail === "azhartridesebrii@gmail.com" && session?.user?.email) {
+        console.log("Correcting hardcoded email with session email:", session.user.email);
+        localStorage.setItem("userEmail", session.user.email);
+        setFormData((prev) => ({
+          ...prev,
+          email: session.user.email,
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          email: userEmail,
+          fullName: username || prev.fullName,
+        }));
+      }
 
       // Also try to get the username from the API immediately
-      fetch(`/api/user/info?email=${encodeURIComponent(userEmail)}`)
+      const emailToFetch = session?.user?.email || userEmail;
+      console.log("Fetching user info with email:", emailToFetch);
+      
+      fetch(`/api/user/info?email=${encodeURIComponent(emailToFetch)}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.username) {
@@ -446,8 +490,17 @@ export default function ProfilePage() {
           }
         })
         .catch((err) => console.error("Error fetching user info:", err));
+    } else if (session?.user?.email) {
+      // Jika tidak ada di localStorage tapi ada di session, gunakan email dari session
+      console.log("Using email from session:", session.user.email);
+      localStorage.setItem("userEmail", session.user.email);
+      setFormData((prev) => ({
+        ...prev,
+        email: session.user.email,
+        fullName: session.user.name || prev.fullName,
+      }));
     }
-  }, []); // Empty dependency array to run only once on mount
+  }, [session]); // Tambahkan session sebagai dependency
 
   // Handle form input changes
   const handleInputChange = (
