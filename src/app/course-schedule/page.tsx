@@ -101,14 +101,15 @@ const CourseSchedulePage = () => {
   // Fetch available courses for dropdown
   const fetchCourses = async () => {
     try {
-      const response = await fetch("/api/courses");
+      const response = await fetch("/api/courses?format=simple");
 
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}`);
       }
 
       const data = await response.json();
-      setCourses(data.data || []); // Ensure we always set an array
+      setCourses(data.courses || []); // Menggunakan property 'courses' yang sesuai dengan API response
+      console.log("Fetched courses:", data.courses); // Menambahkan log untuk debugging
     } catch (err) {
       console.error("Error fetching courses:", err);
       setCourses([]); // Set to empty array on error
@@ -430,11 +431,15 @@ const CourseSchedulePage = () => {
                     required
                   >
                     <option value="">Select Course</option>
-                    {courses.map((course) => (
-                      <option key={course.id} value={course.id}>
-                        {course.course.name}
-                      </option>
-                    ))}
+                    {courses && courses.length > 0 ? (
+                      courses.map((course) => (
+                        <option key={course.id} value={course.id}>
+                          {course.course_name}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>Loading courses...</option>
+                    )}
                   </select>
                 </div>
                 <div className="mb-2">

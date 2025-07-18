@@ -314,7 +314,7 @@ export default function InstructureCertificatePage() {
         if (data.certificates?.length > 0) {
           setCertificates(data.certificates || []);
           setInstructureName(data.instructure?.name || "");
-          toast.success(`${data.certificates.length} sertifikat ditemukan`);
+          // toast.success(`${data.certificates.length} sertifikat ditemukan`); // Dihilangkan agar tidak muncul notifikasi
         } else {
           setCertificates([]);
           setInstructureName(data.instructure?.name || "");
@@ -472,34 +472,7 @@ export default function InstructureCertificatePage() {
           </div>
         ) : null}
 
-        {/* Add search form when no ID is provided */}
-        {!instructureId && !loading && (
-          <div className="bg-white rounded-lg shadow-sm p-4 max-w-md mx-auto my-8">
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Find Instructor Certificates</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="instructureId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Instructor ID
-                </label>
-                <input
-                  id="instructureId"
-                  type="text"
-                  value={instructureId}
-                  onChange={(e) => setInstructureId(e.target.value)}
-                  placeholder="Enter instructor ID"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white rounded-md py-2 px-4 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Find Certificates
-              </button>
-            </form>
-          </div>
-        )}
+       
       </div>
 
       {/* Certificate Detail Modal */}
