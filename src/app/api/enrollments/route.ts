@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { prisma } from "@/lib/prisma"
-
+export const dynamic = "force-dynamic";
 // Ensure default roles exist
 async function ensureDefaultRolesExist() {
   try {

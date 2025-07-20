@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+export const dynamic = "force-dynamic";
 
 // Creates a direct link to an instructor's certificate page
 export async function GET(request: NextRequest) {

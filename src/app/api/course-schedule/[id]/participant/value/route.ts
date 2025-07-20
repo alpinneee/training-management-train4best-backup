@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/lib/auth";
 import jwt from 'jsonwebtoken';
-
+export const dynamic = "force-dynamic";
 interface Params {
   params: {
     id: string;  // classId

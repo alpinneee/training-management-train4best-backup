@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { prisma } from "@/lib/prisma"
 import { hash } from "bcryptjs"
 import { authOptions } from "@/lib/auth"
+export const dynamic = "force-dynamic";
 
 // GET /api/user - Get all users
 export async function GET() {

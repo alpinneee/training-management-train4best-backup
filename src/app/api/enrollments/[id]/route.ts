@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { prisma } from "@/lib/prisma"
+export const dynamic = "force-dynamic";
 
 // PATCH /api/enrollments/[id] - Update status pendaftaran
 export async function PATCH(

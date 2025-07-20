@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { sign } from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-
+export const dynamic = "force-dynamic";
 // Fungsi untuk logging
 function logDebug(message: string, data?: any) {
   console.log(`[DASHBOARD-ACCESS] ${message}`, data ? JSON.stringify(data) : '');

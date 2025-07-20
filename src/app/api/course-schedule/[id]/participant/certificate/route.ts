@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendParticipantCertificateEmail } from '@/lib/email';
-
+export const dynamic = "force-dynamic";
 interface Params {
   params: {
     id: string;  // classId
@@ -109,11 +109,11 @@ export async function POST(request: Request, { params }: Params) {
           await sendParticipantCertificateEmail(
             updatedCertificate.participant.user.email,
             updatedCertificate.participant.full_name,
-            updatedCertificate.course.course_name,
+            updatedCertificate.course?.course_name ?? 'Unknown Course',
             updatedCertificate.certificateNumber,
             new Date(updatedCertificate.issueDate).toLocaleDateString('id-ID'),
             certificateLink,
-            updatedCertificate.driveLink || updatedCertificate.pdfUrl
+            (updatedCertificate.driveLink ?? updatedCertificate.pdfUrl) ?? undefined
           );
           console.log('Certificate email sent successfully to:', updatedCertificate.participant.user.email);
         } catch (emailError) {
@@ -172,11 +172,11 @@ export async function POST(request: Request, { params }: Params) {
         await sendParticipantCertificateEmail(
           certificate.participant.user.email,
           certificate.participant.full_name,
-          certificate.course.course_name,
+          certificate.course?.course_name ?? 'Unknown Course',
           certificate.certificateNumber,
           new Date(certificate.issueDate).toLocaleDateString('id-ID'),
           certificateLink,
-          certificate.driveLink || certificate.pdfUrl
+          (certificate.driveLink ?? certificate.pdfUrl) ?? undefined
         );
         console.log('Certificate email sent successfully to:', certificate.participant.user.email);
       } catch (emailError) {

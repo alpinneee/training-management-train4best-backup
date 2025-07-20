@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from "next-auth";
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+export const dynamic = "force-dynamic";
 
 // Endpoint to get current instructure information from session
 export async function GET(request: NextRequest) {
+  console.log("Cookies in API:", request.cookies.getAll());
   try {
     // Get session
     const session = await getServerSession(authOptions);

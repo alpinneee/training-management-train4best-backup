@@ -24,6 +24,7 @@ interface Certificate {
   expiryDate: string;
   status: string;
   course: string;
+  recipientType?: string;
 }
 
 interface Column<T> {
@@ -98,12 +99,18 @@ const CertificatePage = () => {
       if (data && data.data) {
         const formattedCertificates = data.data.map(
           (cert: any, index: number) => {
-            console.log(`Formatting certificate ${cert.id}, course data:`, cert.courseName, cert.course);
+            console.log(`Formatting certificate ${cert.id}, participant data:`, cert.participantName, cert.participant);
+            
+            // Format name with recipient type if available
+            let displayName = cert.participantName || cert.name || "Unknown";
+            if (cert.recipientType && cert.recipientType !== "Unknown") {
+              displayName = `${displayName} (${cert.recipientType})`;
+            }
             
             return {
               id: cert.id,
               no: index + 1,
-              name: cert.participantName || cert.name || "Unknown",
+              name: displayName,
               certificateNumber: cert.certificateNumber,
               issueDate: new Date(cert.issueDate).toLocaleDateString("en-US"),
               expiryDate: new Date(
@@ -111,6 +118,7 @@ const CertificatePage = () => {
               ).toLocaleDateString("en-US"),
               status: cert.status || "Valid",
               course: cert.courseName || "Not Assigned",
+              recipientType: cert.recipientType
             };
           }
         );
@@ -212,7 +220,7 @@ const CertificatePage = () => {
       className: "w-12 text-center",
     },
     {
-      header: "Participant Name",
+      header: "Username",
       accessor: "name",
       className: "min-w-[150px]",
     },

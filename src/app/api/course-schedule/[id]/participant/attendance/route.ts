@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+export const dynamic = "force-dynamic";
 
 // Fungsi helper untuk menghitung jumlah kehadiran
 async function updatePresentDayCount(registrationId: string) {
@@ -23,7 +24,7 @@ async function updatePresentDayCount(registrationId: string) {
 }
 
 // POST /api/course-schedule/[id]/participant/attendance
-export async function POST(request, { params }) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const scheduleId = params.id;
     const body = await request.json();
@@ -68,12 +69,15 @@ export async function POST(request, { params }) {
       presentCount: presentCount
     }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "Failed to create attendance" }, { status: 500 });
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Failed to create attendance" }, { status: 500 });
   }
 }
 
 // GET /api/course-schedule/[id]/participant/attendance?participantId=xxx
-export async function GET(request, { params }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const scheduleId = params.id;
     const participantId = request.nextUrl.searchParams.get("participantId");
@@ -94,12 +98,15 @@ export async function GET(request, { params }) {
     });
     return NextResponse.json({ attendances }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "Failed to fetch attendance" }, { status: 500 });
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Failed to fetch attendance" }, { status: 500 });
   }
 }
 
 // PATCH /api/course-schedule/[id]/participant/attendance
-export async function PATCH(request, { params }) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const scheduleId = params.id;
     const body = await request.json();
@@ -135,12 +142,15 @@ export async function PATCH(request, { params }) {
       presentCount: presentCount
     }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "Failed to update attendance" }, { status: 500 });
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Failed to update attendance" }, { status: 500 });
   }
 }
 
 // DELETE /api/course-schedule/[id]/participant/attendance
-export async function DELETE(request, { params }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const scheduleId = params.id;
     const body = await request.json();
@@ -171,6 +181,9 @@ export async function DELETE(request, { params }) {
       presentCount: presentCount
     }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "Failed to delete attendance" }, { status: 500 });
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Failed to delete attendance" }, { status: 500 });
   }
 } 

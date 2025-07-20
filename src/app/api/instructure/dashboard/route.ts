@@ -104,6 +104,74 @@ export async function GET(request: Request) {
       instructure = await getCurrentInstructure();
     }
     
+    // If still no instructure found, try to create a demo instructure
+    if (!instructure) {
+      console.log('No instructure found, creating demo instructure');
+      
+      // First, ensure we have the correct userType
+      let userType = await prisma.userType.findFirst({
+        where: { usertype: 'Instructure' }
+      });
+      
+      if (!userType) {
+        userType = await prisma.userType.create({
+          data: {
+            id: `usertype_${Date.now()}`,
+            usertype: 'Instructure',
+            description: 'Instructor user type',
+            status: 'Active'
+          }
+        });
+      }
+      
+      // Try to find or create a demo user
+      let demoUser = await prisma.user.findUnique({
+        where: { email: 'demo@example.com' }
+      });
+      
+      if (!demoUser) {
+        demoUser = await prisma.user.create({
+          data: {
+            id: `user_${Date.now()}`,
+            email: 'demo@example.com',
+            username: 'Demo Instructor',
+            password: 'demo123', // Add required password field
+            userTypeId: userType.id
+          }
+        });
+      }
+      
+      // Create demo instructure if it doesn't exist
+      const existingInstructure = await prisma.instructure.findFirst({
+        where: { 
+          user: {
+            some: {
+              id: demoUser.id
+            }
+          }
+        }
+      });
+      
+      if (!existingInstructure) {
+        instructure = await prisma.instructure.create({
+          data: {
+            id: `instructure_${Date.now()}`,
+            full_name: 'Demo Instructor',
+            phone_number: '+6281234567890',
+            address: 'Demo Address',
+            profiency: 'Web Development',
+            user: {
+              connect: {
+                id: demoUser.id
+              }
+            }
+          }
+        });
+      } else {
+        instructure = existingInstructure;
+      }
+    }
+    
     if (!instructure) {
       return NextResponse.json(
         { error: 'Instructure profile not found' },

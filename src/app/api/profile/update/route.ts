@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { decode } from "next-auth/jwt";
 
+export const dynamic = "force-dynamic";
+
 // Helper function to manually check auth when getServerSession fails
 async function validateSessionManually() {
   try {

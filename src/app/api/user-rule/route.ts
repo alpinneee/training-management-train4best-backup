@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+export const dynamic = "force-dynamic";
 
 // GET /api/user-rule - Get all user rules
 export async function GET() {

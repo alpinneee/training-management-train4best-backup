@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+export const dynamic = "force-dynamic";
 
 // Function to generate unique certificate number
 async function generateUniqueCertificateNumber(): Promise<string> {
@@ -64,7 +65,26 @@ export async function GET(req: Request) {
       const certificates = await prisma.certificate.findMany({
         where: whereClause,
         include: {
-          participant: true,
+          participant: {
+            include: {
+              user: {
+                select: {
+                  username: true,
+                  email: true
+                }
+              }
+            }
+          },
+          instructure: {
+            include: {
+              user: {
+                select: {
+                  username: true,
+                  email: true
+                }
+              }
+            }
+          },
           course: true
         },
         skip: isAdmin ? 0 : skip, // Skip pagination for admin view to get all certificates
@@ -80,6 +100,49 @@ export async function GET(req: Request) {
       const formattedCertificates = certificates.map(cert => {
         // Debug log to see what's in the course object
         console.log(`Certificate ${cert.id} course:`, cert.course);
+        console.log(`Certificate ${cert.id} participant:`, cert.participant);
+        console.log(`Certificate ${cert.id} instructure:`, cert.instructure);
+        console.log(`Certificate ${cert.id} participantId:`, cert.participantId);
+        console.log(`Certificate ${cert.id} instructureId:`, cert.instructureId);
+        
+        // Get recipient name from multiple sources
+        let recipientName = "Unknown";
+        let recipientType = "Unknown";
+        
+        // Check if certificate belongs to a participant
+        if (cert.participant) {
+          if (cert.participant.full_name) {
+            recipientName = cert.participant.full_name;
+            recipientType = "Participant";
+            console.log(`Using participant full_name: ${recipientName}`);
+          } else if (cert.participant.user?.username) {
+            recipientName = cert.participant.user.username;
+            recipientType = "Participant";
+            console.log(`Using participant user username: ${recipientName}`);
+          }
+        }
+        // Check if certificate belongs to an instructor
+        else if (cert.instructure) {
+          if (cert.instructure.full_name) {
+            recipientName = cert.instructure.full_name;
+            recipientType = "Instructor";
+            console.log(`Using instructure full_name: ${recipientName}`);
+          } else if (cert.instructure.user && cert.instructure.user.length > 0) {
+            recipientName = cert.instructure.user[0].username;
+            recipientType = "Instructor";
+            console.log(`Using instructure user username: ${recipientName}`);
+          }
+        }
+        // Fallback to certificate name if no participant or instructor found
+        else if (cert.name && !cert.name.includes("Certificate")) {
+          recipientName = cert.name;
+          recipientType = "Unknown";
+          console.log(`Using certificate name: ${recipientName}`);
+        } else {
+          console.log(`No recipient name found for certificate ${cert.id}`);
+        }
+        
+        console.log(`Certificate ${cert.id} final recipientName: ${recipientName} (${recipientType})`);
         
         return {
           id: cert.id,
@@ -90,7 +153,8 @@ export async function GET(req: Request) {
           location: "Online", // Default value
           startDate: cert.issueDate,
           endDate: cert.expiryDate,
-          participantName: cert.participant?.full_name || "Unknown",
+          participantName: recipientName,
+          recipientType: recipientType,
           driveLink: cert.driveLink || null,
           name: cert.name,
           status: cert.status,

@@ -24,7 +24,10 @@ const publicRoutes = [
   '/api',
   '/_next',
   '/favicon.ico',
-  '/img'
+  '/img',
+  '/uploads', // Pastikan ini ada
+  '/uploads/courses', // Tambahkan ini juga
+  '/default-course.jpg',
 ];
 
 // Rute yang hanya bisa diakses admin

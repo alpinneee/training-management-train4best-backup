@@ -5,10 +5,15 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
+        protocol: 'http', // Tambahkan support untuk HTTP
+        hostname: '*',
+      },
+      {
+        protocol: 'https', // Tetap pertahankan HTTPS
         hostname: '*',
       },
     ],
+    unoptimized: true, // Untuk static files lokal
   },
   // Memaksa penggunaan SWC
   swcMinify: true,

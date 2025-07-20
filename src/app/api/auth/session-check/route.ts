@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import { getToken } from 'next-auth/jwt';
 import { verify } from 'jsonwebtoken';
+export const dynamic = "force-dynamic";
 
 function logDebug(message: string, data?: any) {
   if (process.env.NODE_ENV !== 'production') {
@@ -9,7 +10,7 @@ function logDebug(message: string, data?: any) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     logDebug('Checking session status');
     

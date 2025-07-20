@@ -462,12 +462,22 @@ export default function Courses() {
                 >
                   <Card>
                     <div className="relative h-32 w-full">
-                      <Image
-                        src={course.image || "/default-course.jpg"}
-                        alt={course.course_name}
-                        fill
-                        className="object-cover"
-                      />
+                      {course.image && course.image.startsWith('/') ? (
+                        // Untuk static files lokal, gunakan img tag
+                        <img
+                          src={course.image}
+                          alt={course.course_name}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        // Untuk remote images, gunakan Next.js Image
+                        <Image
+                          src={course.image || "/default-course.jpg"}
+                          alt={course.course_name}
+                          fill
+                          className="object-cover"
+                        />
+                      )}
                     </div>
                     <div className="p-2">
                       <p className="text-xs font-medium text-gray-700 mb-1">{course.course_name}</p>

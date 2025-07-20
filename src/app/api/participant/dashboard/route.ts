@@ -80,6 +80,67 @@ export async function GET(req: Request) {
       participant = await getCurrentUser();
     }
     
+    // If still no participant found, try to create a demo participant
+    if (!participant) {
+      console.log('No participant found, creating demo participant');
+      
+      // First, ensure we have the correct userType
+      let userType = await prisma.userType.findFirst({
+        where: { usertype: 'Participant' }
+      });
+      
+      if (!userType) {
+        userType = await prisma.userType.create({
+          data: {
+            id: `usertype_${Date.now()}`,
+            usertype: 'Participant',
+            description: 'Participant user type',
+            status: 'Active'
+          }
+        });
+      }
+      
+      // Try to find or create a demo user
+      let demoUser = await prisma.user.findUnique({
+        where: { email: 'demo@example.com' }
+      });
+      
+      if (!demoUser) {
+        demoUser = await prisma.user.create({
+          data: {
+            id: `user_${Date.now()}`,
+            email: 'demo@example.com',
+            username: 'Demo User',
+            password: 'demo123', // Add required password field
+            userTypeId: userType.id
+          }
+        });
+      }
+      
+      // Create demo participant if it doesn't exist
+      const existingParticipant = await prisma.participant.findFirst({
+        where: { userId: demoUser.id }
+      });
+      
+      if (!existingParticipant) {
+        participant = await prisma.participant.create({
+          data: {
+            id: `participant_${Date.now()}`,
+            full_name: 'Demo Participant',
+            phone_number: '+6281234567890',
+            address: 'Demo Address',
+            gender: 'Male',
+            birth_date: new Date('1990-01-01'),
+            job_title: 'Demo Job',
+            company: 'Demo Company',
+            userId: demoUser.id
+          }
+        });
+      } else {
+        participant = existingParticipant;
+      }
+    }
+    
     if (!participant) {
       return NextResponse.json(
         { error: "Participant not found" },

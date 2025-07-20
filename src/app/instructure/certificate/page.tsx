@@ -5,6 +5,7 @@ import InstructureLayout from "@/components/layouts/InstructureLayout";
 import { X, Download, Eye, ExternalLink, Award } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
+export const dynamic = "force-dynamic";
 
 // Function to convert Google Drive URL to embed URL
 const getGoogleDriveEmbedUrl = (driveUrl: string) => {

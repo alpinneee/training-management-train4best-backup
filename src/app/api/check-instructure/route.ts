@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
+export const dynamic = "force-dynamic";
 // Simple endpoint to check if an instructor exists in the database
 export async function GET(request: NextRequest) {
   try {
@@ -56,8 +56,8 @@ export async function GET(request: NextRequest) {
       instructor: {
         id: instructor.id,
         name: instructor.full_name,
-        email: instructor.email || instructor.user?.email,
-        userId: instructor.userId
+        email: instructor.user[0]?.email,
+        userId: instructor.user[0]?.id
       },
       certificateCount,
       classAssignments,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+export const dynamic = "force-dynamic";
 
 // Logging function
 function logDebug(message: string, data?: any) {

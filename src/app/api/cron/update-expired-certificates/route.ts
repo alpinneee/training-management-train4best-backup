@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+export const dynamic = "force-dynamic";
 
 // GET /api/cron/update-expired-certificates - Update expired certificates
 export async function GET(req: Request) {

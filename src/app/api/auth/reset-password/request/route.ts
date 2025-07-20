@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 import { addDays } from "date-fns";
 import { memoryTokens } from "../memoryTokens";
 import { sendResetPasswordEmail } from "@/lib/email";
-
+export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();

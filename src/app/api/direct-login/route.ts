@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
+export const dynamic = "force-dynamic";
 
 // Fungsi untuk logging
 function logDebug(message: string, data?: any) {

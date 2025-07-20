@@ -14,10 +14,13 @@ interface CalendarProps {
   }>;
 }
 
+type ValuePiece = Date | null;
+type Value = ValuePiece | [ValuePiece, ValuePiece];
+
 export function TrainingCalendar({ locale = 'en-US', upcomingTrainings }: CalendarProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [trainings, setTrainings] = useState(upcomingTrainings);
-  const [value, setValue] = useState(new Date());
+  const [value, setValue] = useState<Value>(new Date());
   
   // Create locale object for the calendar
   const calendarLocale = {
@@ -107,7 +110,12 @@ export function TrainingCalendar({ locale = 'en-US', upcomingTrainings }: Calend
   };
   
   // Trainings for selected date
-  const selectedDateTrainings = getTrainingsForDate(value);
+  const selectedDateTrainings = getTrainingsForDate(Array.isArray(value) ? value[0] || new Date() : value || new Date());
+
+  // Handler untuk onChange Calendar agar sesuai tipe
+  const handleChange = (value: Value, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    setValue(Array.isArray(value) ? value[0] || new Date() : value || new Date());
+  };
 
   return (
     <>
@@ -173,7 +181,7 @@ export function TrainingCalendar({ locale = 'en-US', upcomingTrainings }: Calend
           formatWeekday={calendarLocale.formatWeekday}
           formatShortWeekday={calendarLocale.formatShortWeekday}
           tileClassName={tileClassName}
-          onChange={setValue}
+          onChange={handleChange}
           value={value}
           minDetail="month"
         />
@@ -183,7 +191,7 @@ export function TrainingCalendar({ locale = 'en-US', upcomingTrainings }: Calend
         {selectedDateTrainings.length > 0 ? (
           <div>
             <h3 className="text-xs font-medium text-gray-500 mb-2">
-              Trainings on {format(value, 'd MMMM yyyy')}
+              Trainings on {format(Array.isArray(value) ? value[0] || new Date() : value || new Date(), 'd MMMM yyyy')}
             </h3>
             <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
               {selectedDateTrainings.map((training, index) => (
@@ -209,7 +217,7 @@ export function TrainingCalendar({ locale = 'en-US', upcomingTrainings }: Calend
         ) : (
           <div className="bg-gray-50 rounded-md p-3 text-center">
             <p className="text-sm text-gray-500">
-              No trainings on {format(value, 'd MMMM yyyy')}
+              No trainings on {format(Array.isArray(value) ? value[0] || new Date() : value || new Date(), 'd MMMM yyyy')}
             </p>
           </div>
         )}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+export const dynamic = "force-dynamic";
 
 // Debug endpoint to check instructure and certificate relationships
 export async function GET(request: NextRequest) {

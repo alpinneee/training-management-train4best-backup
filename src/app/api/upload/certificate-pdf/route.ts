@@ -3,6 +3,7 @@ import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { cwd } from 'process';
 import { prisma } from '@/lib/prisma';
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {

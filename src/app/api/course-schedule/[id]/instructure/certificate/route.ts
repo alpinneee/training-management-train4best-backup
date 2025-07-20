@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendCertificateEmail } from '@/lib/email';
+export const dynamic = "force-dynamic";
 
 interface Params {
   params: {
@@ -143,7 +144,7 @@ export async function POST(request: Request, { params }: Params) {
             new Date(updatedCertificate.issueDate).toLocaleDateString('id-ID'),
             updatedCertificate.expiryDate ? new Date(updatedCertificate.expiryDate).toLocaleDateString('id-ID') : 'No expiry',
             certificateLink,
-            updatedCertificate.driveLink || updatedCertificate.pdfUrl
+            (updatedCertificate.driveLink ?? updatedCertificate.pdfUrl) ?? undefined
           );
           console.log('Certificate update email sent successfully to:', instructorEmail);
         } catch (emailError) {
@@ -213,7 +214,7 @@ export async function POST(request: Request, { params }: Params) {
           new Date(certificate.issueDate).toLocaleDateString('id-ID'),
           certificate.expiryDate ? new Date(certificate.expiryDate).toLocaleDateString('id-ID') : 'No expiry',
           certificateLink,
-          certificate.driveLink || certificate.pdfUrl
+          (certificate.driveLink ?? certificate.pdfUrl) ?? undefined
         );
         console.log('Certificate creation email sent successfully to:', instructorEmail);
       } catch (emailError) {

@@ -83,7 +83,29 @@ const DashboardPage = () => {
         preserveParticipantAuth();
         
         // Try to get email from localStorage for demo purposes
-        const userEmail = localStorage.getItem('userEmail');
+        let userEmail = localStorage.getItem('userEmail');
+        
+        // If no email in localStorage, try to load profile data first
+        if (!userEmail) {
+          try {
+            const profileResponse = await fetch('/api/profile/get?email=demo@example.com');
+            if (profileResponse.ok) {
+              const profileData = await profileResponse.json();
+              if (profileData.data && profileData.data.email) {
+                userEmail = profileData.data.email;
+                if (userEmail) {
+                  localStorage.setItem('userEmail', userEmail);
+                  console.log('Loaded email from profile:', userEmail);
+                }
+              }
+            }
+          } catch (profileError) {
+            console.log('Could not load profile data, using fallback email');
+            userEmail = 'demo@example.com';
+            localStorage.setItem('userEmail', userEmail);
+          }
+        }
+        
         const queryParam = userEmail ? `?email=${encodeURIComponent(userEmail)}` : '';
         
         const response = await fetch(`/api/participant/dashboard${queryParam}`);
@@ -126,6 +148,30 @@ const DashboardPage = () => {
     };
     
     fetchDashboardData();
+  }, []);
+
+  // Add a separate useEffect to ensure profile data is loaded
+  useEffect(() => {
+    const loadProfileData = async () => {
+      const userEmail = localStorage.getItem('userEmail');
+      if (userEmail) {
+        try {
+          const profileResponse = await fetch(`/api/profile/get?email=${encodeURIComponent(userEmail)}`);
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            if (profileData.data) {
+              // Store profile data in localStorage for consistency
+              localStorage.setItem('userProfile', JSON.stringify(profileData.data));
+              console.log('Profile data loaded and stored:', profileData.data);
+            }
+          }
+        } catch (error) {
+          console.log('Could not load profile data:', error);
+        }
+      }
+    };
+    
+    loadProfileData();
   }, []);
 
   // Setup database

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendCertificateEmail } from '@/lib/email';
+export const dynamic = "force-dynamic";
 
 interface Params {
   params: {

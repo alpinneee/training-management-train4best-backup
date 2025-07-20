@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs"
 import { JWT } from "next-auth/jwt"
 import { AuthOptions } from "next-auth"
 import { AdapterUser } from "next-auth/adapters"
+export const dynamic = "force-dynamic";
 
 // Define user type
 interface CustomUser {

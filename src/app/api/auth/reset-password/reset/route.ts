@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { memoryTokens } from "../memoryTokens";
 import { sendPasswordResetConfirmationEmail } from "@/lib/email";
-
+export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const { token, password } = await request.json();
